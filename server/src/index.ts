@@ -18,7 +18,11 @@ const outputFoodItemSchema = z.object({
     }),
     preparation_time: z.string(),
     level: z.string(),
-    preparation: z.array(z.string()),
+    preparation: z.array(z.string())
+});
+
+const outputListFoodItemSchema = z.object({
+    recipes: z.array(outputFoodItemSchema)
 });
 
 const inputSchema = z.object({
@@ -29,6 +33,7 @@ const inputSchema = z.object({
 // configure a Genkit instance
 const ai = genkit({
     plugins: [googleAI()],
+    promptDir: 'prompts',
     model: gemini15Flash, // set default model
 });
 
@@ -68,7 +73,7 @@ export const foodSuggestionFlow = ai.defineFlow(
 export const listFoodsSuggestionFlow = ai.defineFlow(
     {
         name: 'listFoodsSuggestionFlow',
-        outputSchema: z.array(outputFoodItemSchema),
+        outputSchema: outputListFoodItemSchema,
     },
     async () => {
         const { output } = await ai.generate({
@@ -84,8 +89,26 @@ export const listFoodsSuggestionFlow = ai.defineFlow(
             Las recetas tiene que estar en español.
 
             Limite las descripciones de las recetas a 7 palabras.`,
-            output: { schema: z.array(outputFoodItemSchema) }
+            output: { schema: outputListFoodItemSchema }
         });
+        if (output == null) {
+            throw new Error("Response doesn't satisfy schema.");
+        }
+        return output;
+    }
+);
+
+export const listFoodsSuggestionWithDotFlow = ai.defineFlow(
+    {
+        name: 'listFoodsSuggestionWithDotFlow',
+        outputSchema: outputListFoodItemSchema,
+    },
+    async () => {
+        const nluPrompt = ai.prompt("list-food");
+
+        const { output } = await nluPrompt();
+        console.log(11111, output);
+
         if (output == null) {
             throw new Error("Response doesn't satisfy schema.");
         }

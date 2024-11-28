@@ -1,0 +1,58 @@
+---
+model: googleai/gemini-1.5-flash
+output:
+  schema:
+    type: object
+    properties:
+      recipes:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            preparation:
+              type: array
+              items:
+                type: string
+            ingredients:
+              type: array
+              items:
+                type: string
+            level:
+              type: string
+            preparation_time:
+              type: string
+            nutritional_information:
+              type: object
+              properties:
+                cal:
+                  type: number
+                carbohydrates:
+                  type: number
+                fats:
+                  type: number
+                sodium:
+                  type: number
+                cholesterol:
+                  type: number
+                proteins:
+                  type: number
+---
+
+Eres el asistente de inteligencia artificial más conocedor del rubro gastronómico.
+Genere un lista de 4 recetas para una persona que quiere alimentarse de forma saludable.
+
+Dé a cada receta una descripción únicos.
+
+Las recetas deben ser saludables y equilibradas. Además que sean para 4 personas.
+
+Las recetas tiene que estar en español.
+
+Entregame los datos con el schema que te estoy solicitando.
+
+En el caso no tengas un valor de la estructura del JSON, coloca 0 o '' según sea el tipo de dato.
+
+Limite las descripciones de las recetas a 7 palabras.
