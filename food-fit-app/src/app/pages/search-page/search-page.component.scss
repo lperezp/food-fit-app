@@ -34,7 +34,7 @@
 
     &__results {
         display: flex;
-        overflow: scroll;
+        overflow-x: auto;
         gap: 20px;
 
         &--item {
