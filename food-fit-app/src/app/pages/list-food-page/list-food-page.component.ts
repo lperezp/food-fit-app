@@ -17,15 +17,22 @@ export class ListFoodPageComponent implements OnInit {
   private router = inject(Router);
 
   ngOnInit(): void {
-    this.generateRecipes();
+    const listFood = localStorage.getItem('LIST_FOOD');
+    if (listFood) {
+      this.listFood = JSON.parse(listFood);
+    } else {
+      this.generateRecipes();
+    }
   }
 
   generateRecipes() {
+    localStorage.removeItem('LIST_FOOD');
     this.isLoading = true;
     this.listFood = [];
 
     this.foodService.generatedRecipes().subscribe((data: any) => {
       this.listFood = data.result.recipes;
+      localStorage.setItem('LIST_FOOD', JSON.stringify(this.listFood));
       this.isLoading = false;
     });
   }
