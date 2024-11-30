@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { HeaderComponent } from "../../components/header/header.component";
 import { FoodService } from '../../services/food.service';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-list-food-page',
@@ -13,6 +14,7 @@ export class ListFoodPageComponent implements OnInit {
   listFood: any = [];
   isLoading = false;
   private foodService = inject(FoodService);
+  private router = inject(Router);
 
   ngOnInit(): void {
     this.generateRecipes();
@@ -26,5 +28,10 @@ export class ListFoodPageComponent implements OnInit {
       this.listFood = data.result.recipes;
       this.isLoading = false;
     });
+  }
+
+  openDetail(item: any) {
+    localStorage.setItem('DETAIL_FOOD', JSON.stringify(item));
+    this.router.navigate(['/detail-food']);
   }
 }

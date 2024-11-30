@@ -1,0 +1,40 @@
+<app-header />
+<div class="container">
+    <h1 class="container__title">{{detailFood.name}}</h1>
+    <p class="container__paragraph">{{detailFood.description}}</p>
+    <p class="container__paragraph time">
+        <img src="./images/icon_time_black.svg" alt="Icon time">
+        {{detailFood.preparation_time}}
+    </p>
+    <p class="container__paragraph level">{{detailFood.level}}</p>
+    <div class="container__information">
+        <p class="information--item">
+            <img src="./images/icon_carbohydrates.svg" alt="Icon carbohydrates">
+            {{detailFood.nutritional_information.carbohydrates}} carbs
+        </p>
+        <p class="information--item">
+            <img src="./images/icon_calories.svg" alt="Icon cal">
+            {{detailFood.nutritional_information.cal}} Kcal
+        </p>
+        <p class="information--item">
+            <img src="./images/icon_proteins.svg" alt="Icon proteins">
+            {{detailFood.nutritional_information.proteins}} proteínas
+        </p>
+        <p class="information--item">
+            <img src="./images/icon_cholesterol.svg" alt="Icon cholesterol">
+            {{detailFood.nutritional_information.cholesterol}} grasas
+        </p>
+    </div>
+    <h2 class="container__subtitle">Ingredientes</h2>
+    <ul class="container__list">
+        @for (item of detailFood.ingredients; track $index) {
+        <li>{{item}}</li>
+        }
+    </ul>
+    <h2 class="container__subtitle">Preparación</h2>
+    <ul class="container__list">
+        @for (item of detailFood.preparation; track $index) {
+        <li>{{item}}</li>
+        }
+    </ul>
+</div>
