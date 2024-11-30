@@ -8,5 +8,8 @@ import { RouterLink } from '@angular/router';
   styleUrl: './home-page.component.scss'
 })
 export class HomePageComponent {
-
+  constructor() {
+    localStorage.removeItem('LIST_FOOD_BY_INGREDIENT');
+    localStorage.removeItem('LIST_FOOD');
+  }
 }

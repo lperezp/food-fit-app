@@ -12,7 +12,7 @@
     <h2 class="container__title">Recomendaciones</h2>
     <div class="container__results">
         @for (item of listFood; track $index) {
-        <div class="container__results--item">
+        <div class="container__results--item" (click)="openDetail(item)">
             <h2 class="item__title">{{item.name}}</h2>
             <div class="item__information">
                 <p class="item__information--time">
