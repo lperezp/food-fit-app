@@ -42,7 +42,7 @@ const ai = genkit({
 export const foodSuggestionFlow = onFlow(
     ai,
     {
-        name: 'foodSuggestionFlow ',
+        name: 'foodSuggestionFlow',
         authPolicy: noAuth(),
         inputSchema: inputSchema,
         outputSchema: z.array(outputFoodItemSchema),
