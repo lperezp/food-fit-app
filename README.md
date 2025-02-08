@@ -1,4 +1,4 @@
-# Food Fit App in Angular
+# Food Fit App in Genkit with Angular
 
 ![Cover Food Fit App](cover.png "Cover Food Fit App")
 
