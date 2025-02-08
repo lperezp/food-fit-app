@@ -1,6 +1,6 @@
 {
-  "name": "genkit-template",
-  "version": "1.0.0",
+  "name": "food-fit-genkit",
+  "version": "2.0.0",
   "description": "Template for Genkit",
   "main": "lib/index.js",
   "scripts": {
@@ -15,11 +15,12 @@
   "author": "Luis Eduardo <lperezp.dev>",
   "license": "MIT",
   "dependencies": {
-    "@genkit-ai/googleai": "^0.9.4",
+    "@genkit-ai/googleai": "^1.0.4",
     "dotenv": "^16.4.5",
-    "genkit": "^0.9.4"
+    "genkit": "^1.0.4"
   },
   "devDependencies": {
+    "genkit-cli": "^1.0.4",
     "tsx": "^4.19.2",
     "typescript": "^5.4.5"
   }
