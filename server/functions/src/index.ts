@@ -2,7 +2,20 @@
 import { defineSecret } from "firebase-functions/params";
 import { gemini15Flash, googleAI } from '@genkit-ai/googleai';
 import { genkit, z } from 'genkit';
-import { onCallGenkit } from "firebase-functions/https";
+import { onCallGenkit, onRequest } from "firebase-functions/https";
+import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
+
+enableFirebaseTelemetry(
+    {
+        forceDevExport: true,
+    }
+);
+
+// configure a Genkit instance
+const ai = genkit({
+    plugins: [googleAI()],
+    model: gemini15Flash,
+});
 
 const googleAIapiKey = defineSecret("GOOGLE_GENAI_API_KEY");
 
@@ -30,14 +43,6 @@ const outputFoodItemSchema = z.object({
 
 const outputListFoodItemSchema = z.object({
     recipes: z.array(outputFoodItemSchema)
-});
-
-
-
-// configure a Genkit instance
-const ai = genkit({
-    plugins: [googleAI()],
-    model: gemini15Flash,
 });
 
 export const foodSuggestionFlow = ai.defineFlow(
@@ -107,9 +112,18 @@ export const listFoodsSuggestionFlow = ai.defineFlow(
     }
 );
 
-export const listFoodsSuggestionFlowFunction = onCallGenkit(
+// export const listFoodsSuggestionFlowFunction = onCallGenkit(
+//     {
+//         authPolicy: () => true,
+//         secrets: [googleAIapiKey],
+//         cors: '*'
+//     }, listFoodsSuggestionFlow);
+
+export const listFoodsSuggestionFlowFunction = onRequest(
     {
-        authPolicy: () => true,
+        cors: '*',
         secrets: [googleAIapiKey],
-        cors: '*'
-    }, listFoodsSuggestionFlow);
+    },
+    async (req, res) => {
+        res.status(200).send(await listFoodsSuggestionFlow(req.body));
+    });
