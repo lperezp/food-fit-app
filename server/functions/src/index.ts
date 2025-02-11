@@ -5,11 +5,7 @@ import { genkit, z } from 'genkit';
 import { onCallGenkit, onRequest } from "firebase-functions/https";
 import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
 
-enableFirebaseTelemetry(
-    {
-        forceDevExport: true,
-    }
-);
+enableFirebaseTelemetry();
 
 // configure a Genkit instance
 const ai = genkit({
