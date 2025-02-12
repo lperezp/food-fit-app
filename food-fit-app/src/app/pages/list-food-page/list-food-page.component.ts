@@ -31,7 +31,7 @@ export class ListFoodPageComponent implements OnInit {
     this.listFood = [];
 
     this.foodService.generatedRecipes().subscribe((data: any) => {
-      this.listFood = data.result.recipes;
+      this.listFood = data.recipes;
       localStorage.setItem('LIST_FOOD', JSON.stringify(this.listFood));
       this.isLoading = false;
     });
