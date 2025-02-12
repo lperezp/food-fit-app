@@ -1,11 +1,24 @@
-import { defineSecret } from "firebase-functions/params";
 // import the Genkit and Google AI plugin libraries
-import { gemini15Flash, googleAI, gemini10Pro } from '@genkit-ai/googleai';
+import { defineSecret } from "firebase-functions/params";
+import { gemini15Flash, googleAI } from '@genkit-ai/googleai';
 import { genkit, z } from 'genkit';
-import { noAuth, onFlow } from '@genkit-ai/firebase/functions';
+import { onCallGenkit, onRequest } from "firebase-functions/https";
+import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
+
+enableFirebaseTelemetry();
+
+// configure a Genkit instance
+const ai = genkit({
+    plugins: [googleAI()],
+    model: gemini15Flash,
+});
 
 const googleAIapiKey = defineSecret("GOOGLE_GENAI_API_KEY");
 
+const inputSchema = z.object({
+    ingredient: z.string(),
+    quantity_people: z.number()
+});
 
 const outputFoodItemSchema = z.object({
     name: z.string(),
@@ -24,32 +37,15 @@ const outputFoodItemSchema = z.object({
     preparation: z.array(z.string()),
 });
 
-const inputSchema = z.object({
-    ingredient: z.string(),
-    quantity_people: z.number()
-});
-
 const outputListFoodItemSchema = z.object({
     recipes: z.array(outputFoodItemSchema)
 });
 
-// configure a Genkit instance
-const ai = genkit({
-    plugins: [googleAI()],
-    model: gemini10Pro, // set default model
-});
-
-export const foodSuggestionFlow = onFlow(
-    ai,
+export const foodSuggestionFlow = ai.defineFlow(
     {
         name: 'foodSuggestionFlow',
-        authPolicy: noAuth(),
         inputSchema: inputSchema,
         outputSchema: z.array(outputFoodItemSchema),
-        httpsOptions: {
-            secrets: [googleAIapiKey],
-            cors: '*',
-        },
     },
     async (payload) => {
         const { output } = await ai.generate({
@@ -79,16 +75,16 @@ export const foodSuggestionFlow = onFlow(
     }
 );
 
-export const listFoodsSuggestionFlow = onFlow(
-    ai,
+export const foodSuggestionFlowFunction = onCallGenkit({
+    authPolicy: () => true,
+    secrets: [googleAIapiKey],
+    cors: '*'
+}, foodSuggestionFlow);
+
+export const listFoodsSuggestionFlow = ai.defineFlow(
     {
         name: 'listFoodsSuggestionFlow',
         outputSchema: outputListFoodItemSchema,
-        authPolicy: noAuth(),
-        httpsOptions: {
-            secrets: [googleAIapiKey],
-            cors: '*',
-        },
     },
     async () => {
         const { output } = await ai.generate({
@@ -111,3 +107,19 @@ export const listFoodsSuggestionFlow = onFlow(
         return output;
     }
 );
+
+// export const listFoodsSuggestionFlowFunction = onCallGenkit(
+//     {
+//         authPolicy: () => true,
+//         secrets: [googleAIapiKey],
+//         cors: '*'
+//     }, listFoodsSuggestionFlow);
+
+export const listFoodsSuggestionFlowFunction = onRequest(
+    {
+        cors: '*',
+        secrets: [googleAIapiKey],
+    },
+    async (req, res) => {
+        res.status(200).send(await listFoodsSuggestionFlow(req.body));
+    });
