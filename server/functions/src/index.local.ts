@@ -1,8 +1,9 @@
 require('dotenv').config();
 
 // import the Genkit and Google AI plugin libraries
-import { gemini15Flash, googleAI } from '@genkit-ai/googleai';
 import { z, genkit } from 'genkit';
+import { vertexAI } from '@genkit-ai/vertexai';
+import { gemini15Flash, imagen3 } from '@genkit-ai/vertexai';
 
 const outputFoodItemSchema = z.object({
     name: z.string(),
@@ -26,10 +27,11 @@ const inputSchema = z.object({
     quantity_people: z.number()
 });
 
-// configure a Genkit instance
+
 const ai = genkit({
-    plugins: [googleAI()],
-    model: gemini15Flash, // set default model
+    plugins: [
+        vertexAI({ location: 'us-central1' }),
+    ],
 });
 
 export const foodSuggestionFlow = ai.defineFlow(
@@ -89,6 +91,21 @@ export const listFoodsSuggestionFlow = ai.defineFlow(
         if (output == null) {
             throw new Error("Response doesn't satisfy schema.");
         }
+        return output;
+    }
+);
+
+export const generateFoodFlow = ai.defineFlow(
+    {
+        name: 'generateFoodFlow',
+        outputSchema: z.any(),
+    },
+    async () => {
+        const { output } = await ai.generate({
+            model: imagen3,
+            prompt: `a banana riding a bicycle`,
+            output: { format: 'media' },
+        });
         return output;
     }
 );
