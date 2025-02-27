@@ -2,8 +2,7 @@ require('dotenv').config();
 
 // import the Genkit and Google AI plugin libraries
 import { z, genkit } from 'genkit';
-import { vertexAI } from '@genkit-ai/vertexai';
-import { gemini15Flash, imagen3 } from '@genkit-ai/vertexai';
+import { gemini15Flash, imagen3, vertexAI } from '@genkit-ai/vertexai';
 
 const outputFoodItemSchema = z.object({
     name: z.string(),
@@ -95,17 +94,24 @@ export const listFoodsSuggestionFlow = ai.defineFlow(
     }
 );
 
-export const generateFoodFlow = ai.defineFlow(
+export const generateImageFoodFlow = ai.defineFlow(
     {
-        name: 'generateFoodFlow',
-        outputSchema: z.any(),
+        name: 'generateImageFoodFlow',
+        inputSchema: z.object({
+            food: z.string(),
+        })
     },
-    async () => {
-        const { output } = await ai.generate({
+    async (payload) => {
+        const response = await ai.generate({
             model: imagen3,
-            prompt: `a banana riding a bicycle`,
+            prompt: `Photo of the Peruvian dish ${payload.food}`,
             output: { format: 'media' },
         });
-        return output;
+
+        if (response == null) {
+            throw new Error("Response doesn't satisfy schema.");
+        }
+
+        return response.message.content[0].media;
     }
 );

@@ -1,16 +1,14 @@
 // import the Genkit and Google AI plugin libraries
 import { defineSecret } from "firebase-functions/params";
-import { gemini15Flash, googleAI } from '@genkit-ai/googleai';
+import { gemini15Flash, imagen3, vertexAI } from '@genkit-ai/vertexai';
 import { genkit, z } from 'genkit';
 import { onCallGenkit, onRequest } from "firebase-functions/https";
 import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
 
 enableFirebaseTelemetry();
 
-// configure a Genkit instance
 const ai = genkit({
-    plugins: [googleAI()],
-    model: gemini15Flash,
+    plugins: [vertexAI({ location: 'us-central1' })]
 });
 
 const googleAIapiKey = defineSecret("GOOGLE_GENAI_API_KEY");
@@ -108,13 +106,6 @@ export const listFoodsSuggestionFlow = ai.defineFlow(
     }
 );
 
-// export const listFoodsSuggestionFlowFunction = onCallGenkit(
-//     {
-//         authPolicy: () => true,
-//         secrets: [googleAIapiKey],
-//         cors: '*'
-//     }, listFoodsSuggestionFlow);
-
 export const listFoodsSuggestionFlowFunction = onRequest(
     {
         cors: '*',
@@ -123,3 +114,28 @@ export const listFoodsSuggestionFlowFunction = onRequest(
     async (req, res) => {
         res.status(200).send(await listFoodsSuggestionFlow(req.body));
     });
+
+export const generateImageFoodFlow = ai.defineFlow(
+    {
+        name: 'generateImageFoodFlow',
+    },
+    async (payload) => {
+        const response = await ai.generate({
+            model: imagen3,
+            prompt: `Photo of the Peruvian dish ${payload.food}`,
+            output: { format: 'media' },
+        });
+
+        if (response == null) {
+            throw new Error("Response doesn't satisfy schema.");
+        }
+
+        return response.message.content[0].media;
+    }
+);
+
+export const generateImageFoodFlowFunction = onCallGenkit({
+    authPolicy: () => true,
+    secrets: [googleAIapiKey],
+    cors: '*'
+}, generateImageFoodFlow);
