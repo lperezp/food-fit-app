@@ -3,7 +3,7 @@
     <form class="container__form" [formGroup]="formSearch">
         <input class="container__form--input" formControlName="ingredient" type="text" aria-label="Ingresar alimento"
             placeholder="Ingresar alimento" />
-        <button class="container__form--btn" type="button" [disabled]="!formSearch.valid"
+        <button class="container__form--btn" type="button" [disabled]="!formSearch.valid || isLoading"
             (click)="generateRecipesByIngredient()">
             Generar recetas
         </button>
