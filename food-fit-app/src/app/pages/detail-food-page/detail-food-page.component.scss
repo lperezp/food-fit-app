@@ -1,6 +1,43 @@
+@keyframes shine-lines {
+    0% {
+        background-position: -1200px;
+    }
+
+    100% {
+        background-position: 1200px;
+    }
+}
+
 .container {
     padding: 32px 24px;
     color: #141516;
+
+    &__image {
+        width: 100%;
+        height: 300px;
+        background-size: cover;
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+
+        &--loading {
+            background-image: linear-gradient(90deg, #dddddd 0px, #e8e8e8 40px, #dddddd 80px);
+            animation: shine-lines 8s infinite linear;
+            background-size: 300px;
+            background-repeat: initial;
+        }
+    }
+
+    &__label {
+        margin-bottom: 24px;
+        display: block;
+
+        &--link {
+            font-weight: bold;
+            color: #22719E;
+            text-decoration: none;
+        }
+    }
 
     &__title {
         margin-bottom: 16px;

@@ -1,5 +1,11 @@
 <app-header />
 <div class="container">
+    <div class="container__image"
+        [style.backgroundImage]="detailFood?.image ? 'url(' + detailFood.image + ')' : 'linear-gradient(90deg, #dddddd 0px, #e8e8e8 40px, #dddddd 80px)'"
+        [class.container__image--loading]="!detailFood?.image"></div>
+    <small class="container__label">Imagen referencial generado por <a class="container__label--link"
+            href="https://deepmind.google/technologies/imagen-3/">Imagen 3</a> [Modelo de generación de imagen de
+        Google]</small>
     <h1 class="container__title">{{detailFood.name}}</h1>
     <p class="container__paragraph">{{detailFood.description}}</p>
     <p class="container__paragraph time">

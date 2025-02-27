@@ -11,7 +11,7 @@ import { Router } from '@angular/router';
   styleUrl: './list-food-page.component.scss'
 })
 export class ListFoodPageComponent implements OnInit {
-  listFood: any = [];
+  listFood = [];
   isLoading = false;
   private foodService = inject(FoodService);
   private router = inject(Router);
@@ -30,14 +30,14 @@ export class ListFoodPageComponent implements OnInit {
     this.isLoading = true;
     this.listFood = [];
 
-    this.foodService.generatedRecipes().subscribe((data: any) => {
-      this.listFood = data.recipes;
+    this.foodService.generatedRecipes().subscribe((data) => {
+      this.listFood = data['recipes'];
       localStorage.setItem('LIST_FOOD', JSON.stringify(this.listFood));
       this.isLoading = false;
     });
   }
 
-  openDetail(item: any) {
+  openDetail(item) {
     localStorage.setItem('DETAIL_FOOD', JSON.stringify(item));
     this.router.navigate(['/detail-food']);
   }

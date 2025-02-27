@@ -18,7 +18,7 @@ export class SearchPageComponent implements OnInit {
   formSearch: FormGroup = this.formBuilder.group({
     ingredient: ['', Validators.required]
   });
-  listFood: any = [];
+  listFood = [];
   isLoading = false;
 
   ngOnInit(): void {
@@ -38,14 +38,14 @@ export class SearchPageComponent implements OnInit {
         quantity_people: 2
       }
     }
-    this.foodService.getRecipesByIngredient(payload).subscribe((data: any) => {
-      localStorage.setItem('LIST_FOOD_BY_INGREDIENT', JSON.stringify(data.result));
-      this.listFood = data.result;
+    this.foodService.getRecipesByIngredient(payload).subscribe((data) => {
+      localStorage.setItem('LIST_FOOD_BY_INGREDIENT', JSON.stringify(data["result"]));
+      this.listFood = data["result"];
       this.isLoading = false;
     });
   }
 
-  openDetail(item: any) {
+  openDetail(item) {
     localStorage.setItem('DETAIL_FOOD', JSON.stringify(item));
     this.router.navigate(['/detail-food']);
   }
