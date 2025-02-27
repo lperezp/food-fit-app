@@ -24,8 +24,8 @@ export class DetailFoodPageComponent {
       }
     }
 
-    // this.foodService.generatedImageFood(payload).subscribe((data) => {
-    //   this.detailFood.image = data["result"].url;
-    // });
+    this.foodService.generatedImageFood(payload).subscribe((data) => {
+      this.detailFood.image = data["result"].url;
+    });
   }
 }
