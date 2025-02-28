@@ -1,9 +1,11 @@
-// import the Genkit and Google AI plugin libraries
 import { defineSecret } from "firebase-functions/params";
 import { gemini20Flash001, imagen3, vertexAI } from '@genkit-ai/vertexai';
 import { genkit, z } from 'genkit';
 import { onCallGenkit, onRequest } from "firebase-functions/https";
 import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
+import { inputSchema } from './schemas/input.schema';
+import { outputFoodItemSchema } from './schemas/output-food-item.schema';
+import { outputListFoodItemSchema } from './schemas/output-list-food-item.schema';
 
 enableFirebaseTelemetry();
 
@@ -12,32 +14,6 @@ const ai = genkit({
 });
 
 const googleAIapiKey = defineSecret("GOOGLE_GENAI_API_KEY");
-
-const inputSchema = z.object({
-    ingredient: z.string(),
-    quantity_people: z.number()
-});
-
-const outputFoodItemSchema = z.object({
-    name: z.string(),
-    description: z.string(),
-    ingredients: z.array(z.string()),
-    nutritional_information: z.object({
-        cal: z.number(),
-        carbohydrates: z.number(),
-        fats: z.number(),
-        sodium: z.number(),
-        cholesterol: z.number(),
-        proteins: z.number(),
-    }),
-    preparation_time: z.string(),
-    level: z.string(),
-    preparation: z.array(z.string()),
-});
-
-const outputListFoodItemSchema = z.object({
-    recipes: z.array(outputFoodItemSchema)
-});
 
 export const foodSuggestionFlow = ai.defineFlow(
     {

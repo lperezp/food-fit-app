@@ -1,31 +1,9 @@
 require('dotenv').config();
 
-// import the Genkit and Google AI plugin libraries
 import { z, genkit } from 'genkit';
 import { gemini20Flash001, imagen3, vertexAI } from '@genkit-ai/vertexai';
-
-const outputFoodItemSchema = z.object({
-    name: z.string(),
-    description: z.string(),
-    ingredients: z.array(z.string()),
-    nutritional_information: z.object({
-        cal: z.number(),
-        carbohydrates: z.number(),
-        fats: z.number(),
-        sodium: z.number(),
-        cholesterol: z.number(),
-        proteins: z.number(),
-    }),
-    preparation_time: z.string(),
-    level: z.string(),
-    preparation: z.array(z.string()),
-});
-
-const inputSchema = z.object({
-    ingredient: z.string(),
-    quantity_people: z.number()
-});
-
+import { outputFoodItemSchema } from './schemas/output-food-item.schema';
+import { inputSchema } from './schemas/input.schema';
 
 const ai = genkit({
     plugins: [
