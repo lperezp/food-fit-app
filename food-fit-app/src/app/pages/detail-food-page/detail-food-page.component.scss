@@ -14,7 +14,9 @@
 
     &__image {
         width: 100%;
+        max-width: 400px;
         height: 300px;
+        margin: 0 auto 4px auto;
         background-size: cover;
         background-position: center;
         background-size: cover;
@@ -31,6 +33,7 @@
     &__label {
         margin-bottom: 24px;
         display: block;
+        text-align: center;
 
         &--link {
             font-weight: bold;
