@@ -2,7 +2,7 @@ require('dotenv').config();
 
 // import the Genkit and Google AI plugin libraries
 import { z, genkit } from 'genkit';
-import { gemini15Flash, imagen3, vertexAI } from '@genkit-ai/vertexai';
+import { gemini20Flash001, imagen3, vertexAI } from '@genkit-ai/vertexai';
 
 const outputFoodItemSchema = z.object({
     name: z.string(),
@@ -41,7 +41,7 @@ export const foodSuggestionFlow = ai.defineFlow(
     },
     async (payload) => {
         const { output } = await ai.generate({
-            model: gemini15Flash,
+            model: gemini20Flash001,
             prompt: `
             Eres el asistente de inteligencia artificial más conocedor del rubro gastronómico.
             Genere un lista de 4 recetas para una persona que quiere alimentarse de forma saludable.
@@ -73,7 +73,7 @@ export const listFoodsSuggestionFlow = ai.defineFlow(
     },
     async () => {
         const { output } = await ai.generate({
-            model: gemini15Flash,
+            model: gemini20Flash001,
             prompt: `Eres el asistente de inteligencia artificial más conocedor del rubro gastronómico.
             Genere un lista de 4 recetas para una persona que quiere alimentarse de forma saludable.
             En la matriz del las recetas, coloque las recetas como lo haría un recetario de comida.

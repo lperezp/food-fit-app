@@ -1,6 +1,6 @@
 // import the Genkit and Google AI plugin libraries
 import { defineSecret } from "firebase-functions/params";
-import { gemini15Flash, imagen3, vertexAI } from '@genkit-ai/vertexai';
+import { gemini20Flash001, imagen3, vertexAI } from '@genkit-ai/vertexai';
 import { genkit, z } from 'genkit';
 import { onCallGenkit, onRequest } from "firebase-functions/https";
 import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
@@ -47,7 +47,7 @@ export const foodSuggestionFlow = ai.defineFlow(
     },
     async (payload) => {
         const { output } = await ai.generate({
-            model: gemini15Flash,
+            model: gemini20Flash001,
             prompt: `
             Eres el asistente de inteligencia artificial más conocedor del rubro gastronómico.
             Genere un lista de 4 recetas para una persona que quiere alimentarse de forma saludable.
@@ -86,7 +86,7 @@ export const listFoodsSuggestionFlow = ai.defineFlow(
     },
     async () => {
         const { output } = await ai.generate({
-            model: gemini15Flash,
+            model: gemini20Flash001,
             prompt: `
            Eres el asistente de inteligencia artificial más conocedor del rubro gastronómico.
             Genere un lista de 4 recetas para una persona que quiere alimentarse de forma saludable.
