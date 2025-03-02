@@ -2,7 +2,7 @@
 
 ![Cover Food Fit App](cover.png "Cover Food Fit App")
 
-This is a Food Fit demo that uses Firebase Genkit to generate healthy recipes. This project uses [Angular](https://angular.dev/) for the frontend and [Genkit](https://firebase.google.com/docs/genkit) deployed on [Cloud Functions](https://firebase.google.com/docs/functions).
+This is a Food Fit demo that uses Firebase Genkit to generate healthy recipes. This project uses [Angular](https://angular.dev/) for the frontend and [Genkit](https://firebase.google.com/docs/genkit) deployed on [Cloud Functions](https://firebase.google.com/docs/functions). For more information on how this app was created, check out this [blog post](https://lperezp.medium.com/food-fit-tu-partner-para-tener-una-alimentaci%C3%B3n-saludable-con-genkit-140d7cd25a22).
 
 # Installation
 
