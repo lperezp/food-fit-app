@@ -1,0 +1,48 @@
+<app-header />
+<div class="container">
+    <form class="container__form" [formGroup]="formSearch" (ngSubmit)="addFoodToProhibited()">
+        <input class="container__form--input" formControlName="ingredient" type="text" aria-label="Ingresar alimento"
+            placeholder="Ingresar alimento" />
+        <button class="container__form--btn" type="submit" [disabled]="!formSearch.valid || isLoading">
+            {{ isLoading ? 'Agregando...' : 'Agregar a la lista' }}
+        </button>
+    </form>
+
+    <!-- Mensaje de error -->
+    @if (error) {
+    <div class="container__error">
+        <p>{{ error }}</p>
+    </div>
+    }
+
+    <!-- Lista de alimentos prohibidos -->
+    @if (listFood.length > 0) {
+    <div class="container__foods">
+        <h2 class="container__title">Tus alimentos prohibidos</h2>
+        <div class="foods-list">
+            @for (food of listFood; track food) {
+            <div class="food-item">
+                <span class="food-name">{{ food }}</span>
+                <button class="delete-btn" (click)="removeFoodFromProhibited(food)" title="Eliminar alimento">
+                    ✕
+                </button>
+            </div>
+            }
+        </div>
+    </div>
+    }
+
+    @if (listFood.length === 0 && !isLoading && !error) {
+    <div class="container__empty">
+        <p>No tienes alimentos prohibidos agregados.</p>
+        <p>Usa el formulario de arriba para agregar alimentos que deseas evitar.</p>
+    </div>
+    }
+
+    @if(isLoading){
+    <div class="container__loader">
+        <span class="loader"></span>
+        <p class="paragraph">Cargando...</p>
+    </div>
+    }
+</div>

@@ -5,9 +5,10 @@
     justify-content: flex-end;
     align-items: center;
     height: 100vh;
+    gap: 16px;
 
     &__image {
-        margin-bottom: 160px;
+        margin-bottom: 100px;
         height: 600px;
         width: auto;
 
@@ -31,7 +32,6 @@
             background-color: #141516;
             border-radius: 12px;
             color: #ffffff;
-            margin-bottom: 16px;
             max-width: 400px;
         }
 

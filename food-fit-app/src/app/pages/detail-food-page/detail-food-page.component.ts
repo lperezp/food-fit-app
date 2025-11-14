@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { HeaderComponent } from "../../components/header/header.component";
-import { FoodService } from '../../services/food.service';
+import { FoodService } from '../../services/food/food.service';
 
 @Component({
   selector: 'app-detail-food-page',
