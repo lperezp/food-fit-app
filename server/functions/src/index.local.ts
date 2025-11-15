@@ -117,6 +117,9 @@ export const foodSuggestionWithProhibitedFoodFlow = ai.defineFlow(
 
         const { output } = await ai.generate({
             model: gemini20Flash001,
+            system: `Tu única tarea es generar recetas. 
+            REGLA DE SEGURIDAD ABSOLUTA: ${prohibitedFoodsContext}
+            Nunca, bajo ninguna circunstancia, incluyas alguno de esos ingredientes.`,
             prompt: `
             Eres el asistente de inteligencia artificial más conocedor del rubro gastronómico.
             Genere un lista de 4 recetas para una persona que quiere alimentarse de forma saludable.
