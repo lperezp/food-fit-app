@@ -10,6 +10,7 @@ import { AuthService } from '../../services/auth/auth.service';
 })
 export class MenuPageComponent {
   username: string = null;
+  uuid: string = null;
   private authService = inject(AuthService);
   private router = inject(Router);
 
@@ -17,6 +18,7 @@ export class MenuPageComponent {
     const storedUsername = localStorage.getItem('USER_INFO');
     if (storedUsername) {
       this.username = JSON.parse(storedUsername).displayName;
+      this.uuid = JSON.parse(storedUsername).uid;
     }
   }
 

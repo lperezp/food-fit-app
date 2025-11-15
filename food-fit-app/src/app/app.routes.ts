@@ -24,6 +24,10 @@ export const routes: Routes = [
         component: SearchPageComponent
     },
     {
+        path: 'search/:uuid',
+        component: SearchPageComponent
+    },
+    {
         path: 'list-food',
         component: ListFoodPageComponent
     },
