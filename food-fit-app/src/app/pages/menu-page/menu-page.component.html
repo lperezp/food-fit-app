@@ -1,0 +1,14 @@
+<app-header />
+<div class="container">
+    <h2 class="container__title">Hola, {{ username }}</h2>
+    <p class="container__paragraph">Bienvenidos a Food Fit, tu aplicación de recetas saludables.</p>
+    <div class="container__menu">
+        <a routerLink="/filter-food" class="container__btn--secondary">
+            Filtrar alimentos
+        </a>
+        <a routerLink="/search/{{uuid}}" class="container__btn--primary">Buscar recetas</a>
+        <button type="button" (click)="logOut()" class="container__btn--secondary">
+            Cerrar sesión
+        </button>
+    </div>
+</div>

@@ -18,4 +18,8 @@ export class FoodService {
   generatedImageFood(payload) {
     return this._httpClient.post('https://generateimagefoodflowfunction-v4bqo3zpna-uc.a.run.app', payload);
   }
+
+  generateRecipesWithUserPreferences(payload) {
+    return this._httpClient.post('https://foodsuggestionwithprohibitedfoodflowfunction-v4bqo3zpna-uc.a.run.app', payload);
+  }
 }

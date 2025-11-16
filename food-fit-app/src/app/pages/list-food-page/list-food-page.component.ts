@@ -1,7 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { HeaderComponent } from "../../components/header/header.component";
-import { FoodService } from '../../services/food.service';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FoodService } from '../../services/food/food.service';
 import { Router } from '@angular/router';
 
 @Component({
