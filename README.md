@@ -6,7 +6,7 @@
 
 Built with [Angular](https://angular.dev/) for the frontend and [Firebase Genkit](https://firebase.google.com/docs/genkit) deployed on [Cloud Functions](https://firebase.google.com/docs/functions), this application represents a complete AI-powered food recommendation system.
 
-📖 **Learn More**: Check out this [detailed blog post](https://lperezp.medium.com/food-fit-tu-partner-para-tener-una-alimentaci%C3%B3n-saludable-con-genkit-140d7cd25a22) about the development process.
+📖 **Learn More**: Check out this [article](https://medium.com/@lperezp/food-fit-your-partner-for-healthy-eating-with-genkit-2cbd29702bd5) about the development process. If you wish to read it in spanish, check this [article](https://lperezp.medium.com/food-fit-tu-partner-para-tener-una-alimentaci%C3%B3n-saludable-con-genkit-140d7cd25a22).
 
 ## Firebase Genkit Integration
 
