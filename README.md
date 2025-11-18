@@ -1,5 +1,9 @@
 # Food Fit App powered by Firebase Genkit
 
+![Angular](https://img.shields.io/badge/Angular-19.0.0-DD0031?style=for-the-badge&logo=angular&logoColor=white)
+![Firebase Genkit](https://img.shields.io/badge/Firebase-Genkit-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge)
+
 ![Food Fit App Cover](cover.png "Food Fit App Cover")
 
 **Food Fit** is an intelligent recipe generation application that showcases the power of **Firebase Genkit** for building AI-powered applications. This project demonstrates advanced AI workflows using **Google's Gemini models** for recipe generation and **Imagen** for food photography, all orchestrated through Genkit's powerful flow system.
@@ -11,6 +15,13 @@ Built with [Angular](https://angular.dev/) for the frontend and [Firebase Genkit
 ## Firebase Genkit Integration
 
 ![Application Architecture](application_architecture.png "Application Architecture")
+
+### 📸 Screenshots
+
+
+| Recipe Generation | Prohibited Foods |
+|:---:|:---:|
+| ![Recipe Generation](recipe_generation.png) | ![Prohibited Foods](prohibited_foods.png) |
 
 ### Core AI Capabilities
 This application showcases **Firebase Genkit**'s powerful AI orchestration capabilities through multiple specialized flows:
