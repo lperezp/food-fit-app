@@ -1,15 +1,16 @@
 require('dotenv').config();
 
-import { z, genkit } from 'genkit';
-import { gemini20Flash001, imagen3, vertexAI } from '@genkit-ai/vertexai';
-import { outputFoodItemSchema } from './schemas/output-food-item.schema';
+import { z, genkit, UserFacingError } from 'genkit';
+import { vertexAI } from '@genkit-ai/vertexai';
 import { inputSchema, inputSchemaWithProhibitedFood } from './schemas/input.schema';
 import * as admin from 'firebase-admin';
+import { outputListFoodItemSchema } from './schemas/output-list-food-item.schema';
 
 const ai = genkit({
     plugins: [
         vertexAI({ location: 'us-central1' }),
     ],
+    promptDir: 'prompts',
 });
 
 if (!admin.apps.length) {
@@ -22,60 +23,38 @@ export const foodSuggestionFlow = ai.defineFlow(
     {
         name: 'foodSuggestionFlow',
         inputSchema: inputSchema,
-        outputSchema: z.array(outputFoodItemSchema),
+        outputSchema: outputListFoodItemSchema,
     },
     async (payload) => {
-        const { output } = await ai.generate({
-            model: gemini20Flash001,
-            prompt: `
-            Eres el asistente de inteligencia artificial más conocedor del rubro gastronómico.
-            Genere un lista de 4 recetas para una persona que quiere alimentarse de forma saludable.
-            En la matriz del las recetas, coloque las recetas como lo haría un recetario de comida.
-
-            Las recetas deben contener ${payload.ingredient} como ingrediente principal.
-
-            Dé a cada receta una descripción únicos.
-
-            Las recetas deben ser saludables y equilibradas. Además que sean para ${payload.quantity_people} personas.
-
-            Las recetas tiene que estar en español.
-
-            Limite las descripciones de las recetas a 7 palabras.
-            `,
-            output: { schema: z.array(outputFoodItemSchema) }
-        });
-        if (output == null) {
-            throw new Error("Response doesn't satisfy schema.");
+        try {
+            const suggestionPrompt = ai.prompt('foodSuggestion');
+            const { output } = await suggestionPrompt(payload);
+            if (output == null) {
+                throw new UserFacingError('GENERIC_ERROR', 'No se pudo generar la receta.');
+            }
+            return output;
+        } catch (error) {
+            throw new UserFacingError('Error in foodSuggestionFlow:', error);
         }
-        return output;
     }
 );
 
 export const listFoodsSuggestionFlow = ai.defineFlow(
     {
         name: 'listFoodsSuggestionFlow',
-        outputSchema: z.array(outputFoodItemSchema),
+        outputSchema: outputListFoodItemSchema,
     },
     async () => {
-        const { output } = await ai.generate({
-            model: gemini20Flash001,
-            prompt: `Eres el asistente de inteligencia artificial más conocedor del rubro gastronómico.
-            Genere un lista de 4 recetas para una persona que quiere alimentarse de forma saludable.
-            En la matriz del las recetas, coloque las recetas como lo haría un recetario de comida.
-
-            Dé a cada receta una descripción únicos.
-
-            Las recetas deben ser saludables y equilibradas. Además que sean para 4 personas.
-
-            Las recetas tiene que estar en español.
-
-            Limite las descripciones de las recetas a 7 palabras.`,
-            output: { schema: z.array(outputFoodItemSchema) }
-        });
-        if (output == null) {
-            throw new Error("Response doesn't satisfy schema.");
+        try {
+            const listSuggestionPrompt = ai.prompt('listFoodsSuggestion');
+            const { output } = await listSuggestionPrompt();
+            if (output == null) {
+                throw new UserFacingError('GENERIC_ERROR', 'No se pudo generar la lista de alimentos.');
+            }
+            return output;
+        } catch (error) {
+            throw new UserFacingError('Error in listFoodsSuggestionFlow:', error);
         }
-        return output;
     }
 );
 
@@ -87,17 +66,18 @@ export const generateImageFoodFlow = ai.defineFlow(
         })
     },
     async (payload) => {
-        const response = await ai.generate({
-            model: imagen3,
-            prompt: `Photo of the Peruvian dish ${payload.food}`,
-            output: { format: 'media' },
-        });
+        try {
+            const imagePrompt = ai.prompt('generateImageFood');
+            const response = await imagePrompt(payload);
 
-        if (response == null) {
-            throw new Error("Response doesn't satisfy schema.");
+            if (response == null) {
+                throw new UserFacingError('GENERIC_ERROR', 'No se pudo generar la imagen.');
+            }
+
+            return response.media;
+        } catch (error) {
+            throw new UserFacingError('Error in generateImageFoodFlow:', error);
         }
-
-        return response.message.content[0].media;
     }
 );
 
@@ -105,46 +85,34 @@ export const foodSuggestionWithProhibitedFoodFlow = ai.defineFlow(
     {
         name: 'foodSuggestionWithProhibitedFoodFlow',
         inputSchema: inputSchemaWithProhibitedFood,
-        outputSchema: z.array(outputFoodItemSchema),
+        outputSchema: outputListFoodItemSchema,
     },
     async (payload) => {
-        const userDoc = await db.collection('prohibited-food').doc(payload.userId).get();
-        const prohibitedFoods = userDoc.exists ? userDoc.data()?.foods : [];
+        try {
+            const userDoc = await db.collection('prohibited-food').doc(payload.userId).get();
 
-        const prohibitedFoodsContext = prohibitedFoods.length > 0
-            ? `El usuario es alérgico a: ${prohibitedFoods.join(', ')}. **ASEGÚRATE DE EXCLUIR ESTOS INGREDIENTES. EN EL CASO TE INDIQUE UN ALIMENTO DE LA LISTA COMO ALIMENTO PRINCIPAL, NO GENERES NINGUNA RECETA.**`
-            : 'No hay alergias conocidas.';
+            if (!userDoc.exists) {
+                throw new UserFacingError('USER_NOT_FOUND', 'No se encontraron datos del usuario.');
+            }
 
-        const { output } = await ai.generate({
-            model: gemini20Flash001,
-            system: `Tu única tarea es generar recetas. 
-            REGLA DE SEGURIDAD ABSOLUTA: ${prohibitedFoodsContext}
-            Nunca, bajo ninguna circunstancia, incluyas alguno de esos ingredientes.`,
-            prompt: `
-            Eres el asistente de inteligencia artificial más conocedor del rubro gastronómico.
-            Genere un lista de 4 recetas para una persona que quiere alimentarse de forma saludable.
-            En la matriz del las recetas, coloque las recetas como lo haría un recetario de comida.
+            const prohibitedFoods = userDoc.data()?.foods;
 
-            Las recetas deben contener ${payload.ingredient} como ingrediente principal.
+            const prohibitedFoodsContext = prohibitedFoods.length > 0
+                ? `El usuario es alérgico a: ${prohibitedFoods.join(', ')}. **ASEGÚRATE DE EXCLUIR ESTOS INGREDIENTES. EN EL CASO TE INDIQUE UN ALIMENTO DE LA LISTA COMO ALIMENTO PRINCIPAL, NO GENERES NINGUNA RECETA.**`
+                : 'No hay alergias conocidas.';
 
-            Dé a cada receta una descripción únicos.
+            const suggestionPrompt = ai.prompt('foodSuggestionWithProhibitedFood');
+            const { output } = await suggestionPrompt({
+                ...payload,
+                prohibited_foods_context: prohibitedFoodsContext
+            });
 
-            Las recetas deben ser saludables y equilibradas. Además que sean para ${payload.quantity_people} personas.
-
-            Instrucciones de seguridad: ${prohibitedFoodsContext}
-
-            Las recetas tiene que estar en español.
-
-            Limite las descripciones de las recetas a 7 palabras.
-            `,
-            config: {
-                temperature: 0.2,
-            },
-            output: { schema: z.array(outputFoodItemSchema) }
-        });
-        if (output == null) {
-            throw new Error("Response doesn't satisfy schema.");
+            if (output == null) {
+                throw new UserFacingError('GENERIC_ERROR', 'Hubo un error en la generación de la receta.');
+            }
+            return output;
+        } catch (error) {
+            throw new UserFacingError('Error in foodSuggestionWithProhibitedFoodFlow:', error)
         }
-        return output;
     }
 );

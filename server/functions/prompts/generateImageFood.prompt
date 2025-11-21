@@ -1,0 +1,10 @@
+---
+model: vertexai/imagen-3
+input:
+  schema:
+    food: string
+output:
+  format: media
+---
+
+Photo of the Peruvian dish {{food}}
