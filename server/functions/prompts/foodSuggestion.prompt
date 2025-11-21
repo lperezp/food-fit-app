@@ -1,0 +1,76 @@
+---
+model: vertexai/gemini-2.0-flash-001
+input:
+  schema:
+    ingredient: string
+    quantity_people: number
+output:
+  schema:
+    type: object
+    properties:
+      recipes:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            preparation:
+              type: array
+              items:
+                type: string
+            ingredients:
+              type: array
+              items:
+                type: string
+            level:
+              type: string
+            preparation_time:
+              type: string
+            nutritional_information:
+              type: object
+              properties:
+                cal:
+                  type: number
+                carbohydrates:
+                  type: number
+                fats:
+                  type: number
+                sodium:
+                  type: number
+                cholesterol:
+                  type: number
+                proteins:
+                  type: number
+              required:
+                - cal
+                - carbohydrates
+                - fats
+                - sodium
+                - cholesterol
+                - proteins
+          required:
+            - name
+            - description
+            - preparation
+            - ingredients
+            - level
+            - preparation_time
+            - nutritional_information
+---
+
+Eres el asistente de inteligencia artificial más conocedor del rubro gastronómico.
+Genera una lista de 4 recetas para una persona que quiere alimentarse de forma saludable.
+En la matriz de las recetas, coloca las recetas como lo haría un recetario de comida.
+
+Las recetas deben contener {{ingredient}} como ingrediente principal.
+
+Dé a cada receta una descripción única.
+
+Las recetas deben ser saludables y equilibradas. Además que sean para {{quantity_people}} personas.
+
+Las recetas tienen que estar en español.
+
+Limite las descripciones de las recetas a 7 palabras.
