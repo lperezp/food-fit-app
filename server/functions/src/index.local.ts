@@ -30,11 +30,11 @@ export const foodSuggestionFlow = ai.defineFlow(
             const suggestionPrompt = ai.prompt('foodSuggestion');
             const { output } = await suggestionPrompt(payload);
             if (output == null) {
-                throw new UserFacingError('GENERIC_ERROR', 'No se pudo generar la receta.');
+                throw new UserFacingError('UNAVAILABLE', 'No se pudo generar la receta.');
             }
             return output;
         } catch (error) {
-            throw new UserFacingError('Error in foodSuggestionFlow:', error);
+            throw new UserFacingError('UNAVAILABLE', error);
         }
     }
 );
@@ -49,11 +49,11 @@ export const listFoodsSuggestionFlow = ai.defineFlow(
             const listSuggestionPrompt = ai.prompt('listFoodsSuggestion');
             const { output } = await listSuggestionPrompt();
             if (output == null) {
-                throw new UserFacingError('GENERIC_ERROR', 'No se pudo generar la lista de alimentos.');
+                throw new UserFacingError('UNAVAILABLE', 'No se pudo generar la lista de alimentos.');
             }
             return output;
         } catch (error) {
-            throw new UserFacingError('Error in listFoodsSuggestionFlow:', error);
+            throw new UserFacingError('UNAVAILABLE', error);
         }
     }
 );
@@ -71,12 +71,12 @@ export const generateImageFoodFlow = ai.defineFlow(
             const response = await imagePrompt(payload);
 
             if (response == null) {
-                throw new UserFacingError('GENERIC_ERROR', 'No se pudo generar la imagen.');
+                throw new UserFacingError('UNAVAILABLE', 'No se pudo generar la imagen.');
             }
 
             return response.media;
         } catch (error) {
-            throw new UserFacingError('Error in generateImageFoodFlow:', error);
+            throw new UserFacingError('UNAVAILABLE', error);
         }
     }
 );
@@ -92,7 +92,7 @@ export const foodSuggestionWithProhibitedFoodFlow = ai.defineFlow(
             const userDoc = await db.collection('prohibited-food').doc(payload.userId).get();
 
             if (!userDoc.exists) {
-                throw new UserFacingError('USER_NOT_FOUND', 'No se encontraron datos del usuario.');
+                throw new UserFacingError('UNAUTHENTICATED', 'No se encontraron datos del usuario.');
             }
 
             const prohibitedFoods = userDoc.data()?.foods;
@@ -108,11 +108,11 @@ export const foodSuggestionWithProhibitedFoodFlow = ai.defineFlow(
             });
 
             if (output == null) {
-                throw new UserFacingError('GENERIC_ERROR', 'Hubo un error en la generación de la receta.');
+                throw new UserFacingError('UNAVAILABLE', 'Hubo un error en la generación de la receta.');
             }
             return output;
         } catch (error) {
-            throw new UserFacingError('Error in foodSuggestionWithProhibitedFoodFlow:', error)
+            throw new UserFacingError('UNAVAILABLE', error)
         }
     }
 );
