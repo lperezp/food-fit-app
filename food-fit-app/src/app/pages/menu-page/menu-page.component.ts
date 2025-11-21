@@ -10,15 +10,17 @@ import { AuthService } from '../../services/auth/auth.service';
 })
 export class MenuPageComponent {
   username: string = null;
-  uuid: string = null;
+  uid: string = null;
   private authService = inject(AuthService);
   private router = inject(Router);
 
   constructor() {
-    const storedUsername = localStorage.getItem('USER_INFO');
+    const storedUsername = JSON.parse(localStorage.getItem('USER_INFO'));
+    console.log(11, storedUsername);
+
     if (storedUsername) {
-      this.username = JSON.parse(storedUsername).displayName;
-      this.uuid = JSON.parse(storedUsername).uid;
+      this.username = storedUsername.displayName;
+      this.uid = storedUsername.uid;
     }
   }
 
