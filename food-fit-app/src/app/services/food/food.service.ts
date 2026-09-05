@@ -8,22 +8,22 @@ export class FoodService {
   private readonly _httpClient = inject(HttpClient);
 
   getRecipesByIngredient(payload) {
-    return this._httpClient.post('https://foodsuggestionflowfunction-v4bqo3zpna-uc.a.run.app', payload);
+    return this._httpClient.post('https://foodsuggestionflowfunction-f3vjjpbx5q-uc.a.run.app', payload);
   }
 
   generatedRecipes() {
-    return this._httpClient.get('https://listfoodssuggestionflowfunction-v4bqo3zpna-uc.a.run.app');
+    return this._httpClient.get('https://listfoodssuggestionflowfunction-f3vjjpbx5q-uc.a.run.app');
   }
 
   generatedImageFood(payload) {
-    return this._httpClient.post('https://generateimagefoodflowfunction-v4bqo3zpna-uc.a.run.app', payload);
+    return this._httpClient.post('https://generateimagefoodflowfunction-f3vjjpbx5q-uc.a.run.app', payload);
   }
 
   generateRecipesWithUserPreferences(payload) {
-    return this._httpClient.post('https://foodsuggestionwithprohibitedfoodflowfunction-v4bqo3zpna-uc.a.run.app', payload);
+    return this._httpClient.post('https://foodsuggestionwithprohibitedfoodflowfunction-f3vjjpbx5q-uc.a.run.app', payload);
   }
 
   chatWithNutritionCoach(payload: { data: { message: string; userId?: string } }) {
-    return this._httpClient.post<{ result: string }>('https://nutritioncoachflowfunction-v4bqo3zpna-uc.a.run.app', payload);
+    return this._httpClient.post<{ result: string }>('https://nutritioncoachflowfunction-f3vjjpbx5q-uc.a.run.app', payload);
   }
 }
