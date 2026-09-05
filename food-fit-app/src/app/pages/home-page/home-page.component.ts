@@ -19,9 +19,8 @@ export class HomePageComponent {
 
   loginWithGoogle() {
     this.authService.signInWithGoogle()
-      .then(({ user, token }) => {
+      .then(() => {
         this.router.navigate(['/menu']);
-        localStorage.setItem('USER_INFO', JSON.stringify(user));
       })
       .catch((error) => {
         console.error('Error during sign-in:', error);

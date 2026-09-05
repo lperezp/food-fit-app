@@ -1,2 +1,4 @@
 <router-outlet />
-<app-chat-coach />
+@if (showCoachBubble()) {
+  <app-chat-coach />
+}

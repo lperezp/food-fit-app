@@ -1,8 +1,15 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User } from "firebase/auth";
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { auth } from '../../config/firebase.config';
 import app from '../../config/firebase.config';
+
+export interface UserInfo {
+  uid: string;
+  displayName?: string | null;
+  email?: string | null;
+  photoURL?: string | null;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -11,17 +18,37 @@ export class AuthService {
   private auth = auth;
   private db = getFirestore(app);
 
+  readonly currentUser = signal<UserInfo | null>(this.getStoredUser());
+
   constructor() {
     onAuthStateChanged(this.auth, (user) => {
       if (user) {
-        localStorage.setItem('USER_INFO', JSON.stringify({
+        const userInfo: UserInfo = {
           uid: user.uid,
           displayName: user.displayName,
           email: user.email,
           photoURL: user.photoURL
-        }));
+        };
+        localStorage.setItem('USER_INFO', JSON.stringify(userInfo));
+        this.currentUser.set(userInfo);
+      } else {
+        if (!localStorage.getItem('USER_INFO')) {
+          this.currentUser.set(null);
+        }
       }
     });
+  }
+
+  private getStoredUser(): UserInfo | null {
+    const stored = localStorage.getItem('USER_INFO');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return null;
+      }
+    }
+    return null;
   }
 
   async signInWithGoogle() {
@@ -36,14 +63,17 @@ export class AuthService {
       // Guardar el usuario en Firestore con su uid
       await this.saveUserToFirestore(user);
 
-      localStorage.setItem('USER_INFO', JSON.stringify({
+      const userInfo: UserInfo = {
         uid: user.uid,
         displayName: user.displayName,
         email: user.email,
         photoURL: user.photoURL
-      }));
+      };
 
-      return { user, token };
+      localStorage.setItem('USER_INFO', JSON.stringify(userInfo));
+      this.currentUser.set(userInfo);
+
+      return { user, token, userInfo };
     } catch (error) {
       console.error('Error al iniciar sesión con Google:', error);
       throw error;
@@ -70,19 +100,19 @@ export class AuthService {
   }
 
   // Obtener el usuario actualmente autenticado (con fallback a localStorage)
-  getCurrentUser(): { uid: string; displayName?: string | null; email?: string | null; photoURL?: string | null } | null {
+  getCurrentUser(): UserInfo | null {
+    if (this.currentUser()) {
+      return this.currentUser();
+    }
     if (this.auth.currentUser) {
-      return this.auth.currentUser;
+      return {
+        uid: this.auth.currentUser.uid,
+        displayName: this.auth.currentUser.displayName,
+        email: this.auth.currentUser.email,
+        photoURL: this.auth.currentUser.photoURL
+      };
     }
-    const stored = localStorage.getItem('USER_INFO');
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return null;
-      }
-    }
-    return null;
+    return this.getStoredUser();
   }
 
   getCurrentUserId(): string | null {
@@ -92,11 +122,12 @@ export class AuthService {
 
   // Verificar si hay un usuario autenticado
   isAuthenticated(): boolean {
-    return this.getCurrentUser() !== null;
+    return this.currentUser() !== null || this.getCurrentUser() !== null;
   }
 
   logOut() {
     localStorage.removeItem('USER_INFO');
+    this.currentUser.set(null);
     return this.auth.signOut();
   }
 }
