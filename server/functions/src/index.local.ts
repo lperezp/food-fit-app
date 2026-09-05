@@ -10,6 +10,7 @@ import { googleAI } from '@genkit-ai/google-genai';
 const ai = genkit({
     plugins: [googleAI()],
     promptDir: 'prompts',
+    model: 'googleai/gemini-3.6-flash',
 });
 
 if (!getApps().length) {

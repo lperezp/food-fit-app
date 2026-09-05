@@ -1,5 +1,5 @@
 ---
-model: vertexai/imagen-3
+model: googleai/gemini-3.1-flash-image
 input:
   schema:
     food: string

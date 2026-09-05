@@ -1,5 +1,6 @@
 import { defineSecret } from "firebase-functions/params";
-import { gemini20Flash001, imagen3, vertexAI } from '@genkit-ai/vertexai';
+import { imagen3, vertexAI } from '@genkit-ai/vertexai';
+import { googleAI } from '@genkit-ai/google-genai';
 import { genkit, z } from 'genkit';
 import { onCallGenkit, onRequest } from "firebase-functions/https";
 import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
@@ -12,7 +13,11 @@ import { getFirestore } from 'firebase-admin/firestore';
 enableFirebaseTelemetry();
 
 const ai = genkit({
-    plugins: [vertexAI({ location: 'us-central1' })]
+    plugins: [
+        vertexAI({ location: 'us-central1' }),
+        googleAI(),
+    ],
+    model: 'googleai/gemini-3.6-flash',
 });
 
 if (!getApps().length) {
@@ -31,7 +36,7 @@ export const foodSuggestionFlow = ai.defineFlow(
     },
     async (payload) => {
         const { output } = await ai.generate({
-            model: gemini20Flash001,
+            model: 'googleai/gemini-3.6-flash',
             prompt: `
             Eres el asistente de inteligencia artificial más conocedor del rubro gastronómico.
             Genere un lista de 4 recetas para una persona que quiere alimentarse de forma saludable.
@@ -70,7 +75,7 @@ export const listFoodsSuggestionFlow = ai.defineFlow(
     },
     async () => {
         const { output } = await ai.generate({
-            model: gemini20Flash001,
+            model: 'googleai/gemini-3.6-flash',
             prompt: `
            Eres el asistente de inteligencia artificial más conocedor del rubro gastronómico.
             Genere un lista de 4 recetas para una persona que quiere alimentarse de forma saludable.
@@ -139,7 +144,7 @@ export const foodSuggestionWithProhibitedFoodFlow = ai.defineFlow(
             : 'No hay alergias conocidas.';
 
         const { output } = await ai.generate({
-            model: gemini20Flash001,
+            model: 'googleai/gemini-3.6-flash',
             system: `Tu única tarea es generar recetas. 
             REGLA DE SEGURIDAD ABSOLUTA: ${prohibitedFoodsContext}
             Nunca, bajo ninguna circunstancia, incluyas alguno de esos ingredientes.`,
