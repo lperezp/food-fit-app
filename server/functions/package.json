@@ -21,26 +21,26 @@
   "main": "lib/index.js",
   "dependencies": {
     "@genkit-ai/dotprompt": "^0.9.12",
-    "@genkit-ai/firebase": "^1.24.0",
-    "@genkit-ai/google-genai": "^1.24.0",
-    "@genkit-ai/googleai": "^1.24.0",
-    "@genkit-ai/vertexai": "^1.24.0",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.1",
-    "firebase-admin": "^12.7.0",
-    "firebase-functions": "^6.3.2",
-    "genkit": "^1.24.0"
+    "@genkit-ai/firebase": "^1.42.0",
+    "@genkit-ai/google-genai": "^1.42.0",
+    "@genkit-ai/googleai": "^1.28.0",
+    "@genkit-ai/vertexai": "^1.42.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "firebase-admin": "^14.3.0",
+    "firebase-functions": "^7.3.2",
+    "genkit": "^1.42.0"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.12.0",
-    "@typescript-eslint/parser": "^5.12.0",
-    "eslint": "^8.9.0",
+    "@typescript-eslint/eslint-plugin": "^8.69.0",
+    "@typescript-eslint/parser": "^8.69.0",
+    "eslint": "^10.10.0",
     "eslint-config-google": "^0.14.0",
-    "eslint-plugin-import": "^2.25.4",
-    "firebase-functions-test": "^3.1.0",
-    "genkit-cli": "^1.24.0",
-    "tsx": "^4.19.2",
-    "typescript": "^4.9.5"
+    "eslint-plugin-import": "^2.32.0",
+    "firebase-functions-test": "^3.5.0",
+    "genkit-cli": "^1.42.0",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
   },
   "private": false
 }

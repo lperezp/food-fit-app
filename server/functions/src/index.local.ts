@@ -1,23 +1,22 @@
 require('dotenv').config();
 
 import { z, genkit, UserFacingError } from 'genkit';
-import { vertexAI } from '@genkit-ai/vertexai';
 import { inputSchema, inputSchemaWithProhibitedFood } from './schemas/input.schema';
-import * as admin from 'firebase-admin';
+import { initializeApp, getApps } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 import { outputListFoodItemSchema } from './schemas/output-list-food-item.schema';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const ai = genkit({
-    plugins: [
-        vertexAI({ location: 'us-central1' }),
-    ],
+    plugins: [googleAI()],
     promptDir: 'prompts',
 });
 
-if (!admin.apps.length) {
-    admin.initializeApp();
+if (!getApps().length) {
+    initializeApp();
 }
 
-export const db = admin.firestore();
+export const db = getFirestore();
 
 export const foodSuggestionFlow = ai.defineFlow(
     {
