@@ -22,4 +22,8 @@ export class FoodService {
   generateRecipesWithUserPreferences(payload) {
     return this._httpClient.post('https://foodsuggestionwithprohibitedfoodflowfunction-v4bqo3zpna-uc.a.run.app', payload);
   }
+
+  chatWithNutritionCoach(payload: { data: { message: string; userId?: string } }) {
+    return this._httpClient.post<{ result: string }>('https://nutritioncoachflowfunction-v4bqo3zpna-uc.a.run.app', payload);
+  }
 }

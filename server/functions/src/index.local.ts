@@ -7,6 +7,10 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { outputListFoodItemSchema } from './schemas/output-list-food-item.schema';
 import { googleAI } from '@genkit-ai/google-genai';
 
+import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
+
+enableFirebaseTelemetry();
+
 const ai = genkit({
     plugins: [googleAI()],
     promptDir: 'prompts',

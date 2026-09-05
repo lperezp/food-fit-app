@@ -1,0 +1,113 @@
+<!-- Botón flotante para abrir/cerrar el chat -->
+<button 
+  type="button" 
+  class="chat-floating-btn" 
+  (click)="toggleChat()" 
+  [attr.aria-label]="isOpen ? 'Cerrar chat de coach' : 'Abrir chat con coach nutricional'"
+  [class.chat-floating-btn--active]="isOpen">
+  @if (!isOpen) {
+    <svg class="chat-floating-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+    <span class="chat-floating-btn__badge">Coach</span>
+  } @else {
+    <svg class="chat-floating-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  }
+</button>
+
+<!-- Ventana modal / panel del chat -->
+@if (isOpen) {
+  <div class="chat-window">
+    <!-- Header del chat -->
+    <header class="chat-header">
+      <div class="chat-header__info">
+        <div class="chat-header__avatar">
+          <span>🥑</span>
+          <span class="chat-header__status-dot"></span>
+        </div>
+        <div class="chat-header__titles">
+          <h3 class="chat-header__name">Food Fit Coach</h3>
+          <span class="chat-header__status">Asistente de Nutrición IA</span>
+        </div>
+      </div>
+      <button type="button" class="chat-header__close-btn" (click)="closeChat()" aria-label="Cerrar ventana">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Lista de mensajes -->
+    <div class="chat-messages" #messagesContainer>
+      @for (msg of messages; track $index) {
+        <div class="chat-message" [ngClass]="{'chat-message--user': msg.sender === 'user', 'chat-message--coach': msg.sender === 'coach'}">
+          @if (msg.sender === 'coach') {
+            <div class="chat-message__avatar">🥑</div>
+          }
+          <div class="chat-message__content">
+            <div class="chat-message__bubble">
+              <p class="chat-message__text">{{ msg.text }}</p>
+            </div>
+            <span class="chat-message__time">{{ msg.time }}</span>
+          </div>
+        </div>
+      }
+
+      <!-- Indicador de escribiendo (Loading) -->
+      @if (isLoading) {
+        <div class="chat-message chat-message--coach">
+          <div class="chat-message__avatar">🥑</div>
+          <div class="chat-message__content">
+            <div class="chat-message__bubble chat-message__bubble--typing">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Sugerencias rápidas (si hay pocos mensajes) -->
+    @if (messages.length <= 2 && !isLoading) {
+      <div class="chat-suggestions">
+        <span class="chat-suggestions__label">Preguntas rápidas:</span>
+        <div class="chat-suggestions__chips">
+          @for (suggestion of suggestedQuestions; track $index) {
+            <button type="button" class="chat-suggestions__chip" (click)="sendSuggestion(suggestion)">
+              {{ suggestion }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Input bar / Footer -->
+    <footer class="chat-footer">
+      <form class="chat-footer__form" (ngSubmit)="sendMessage()">
+        <input 
+          type="text" 
+          name="userMessage"
+          [(ngModel)]="currentMessage" 
+          placeholder="Escribe tu consulta sobre comidas..." 
+          class="chat-footer__input"
+          [disabled]="isLoading"
+          autocomplete="off" />
+        <button 
+          type="submit" 
+          class="chat-footer__send-btn" 
+          [disabled]="!currentMessage.trim() || isLoading"
+          aria-label="Enviar mensaje">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </form>
+    </footer>
+  </div>
+}
