@@ -14,7 +14,9 @@ const ai = genkit({
 });
 
 if (!getApps().length) {
-    initializeApp();
+    initializeApp({
+        projectId: 'food-fit-with-genkit',
+    });
 }
 
 export const db = getFirestore();
@@ -84,21 +86,50 @@ export const generateImageFoodFlow = ai.defineFlow(
 export const getProhibitedFoodsTool = ai.defineTool(
     {
         name: 'getProhibitedFoods',
-        description: 'Obtiene la lista de alimentos prohibidos o alergias del usuario desde Firestore.',
+        description: 'Obtiene la lista de alimentos prohibidos o alergias del usuario desde Firestore dado su userId.',
         inputSchema: z.object({
             userId: z.string().describe('ID del usuario a consultar en Firestore'),
         }),
-        outputSchema: z.array(z.string()).describe('Lista de alimentos prohibidos o alergias'),
+        outputSchema: z.object({
+            foods: z.array(z.string()).describe('Lista de alimentos prohibidos o alergias'),
+            needsUserId: z.boolean().describe('Indica si falta el ID o es inválido y debes pedirlo al usuario'),
+            message: z.string().describe('Mensaje o instrucción para el asistente'),
+        }),
     },
     async ({ userId }) => {
-        const userDoc = await db.collection('prohibited-food').doc(userId).get();
-
-        if (!userDoc.exists) {
-            throw new UserFacingError('UNAUTHENTICATED', 'No se encontraron datos del usuario.');
+        if (!userId || userId.trim() === '' || userId === 'default_user' || userId === 'test_user') {
+            return {
+                foods: [],
+                needsUserId: true,
+                message: 'No se ha proporcionado un ID de usuario válido. Pídele al usuario amablemente su ID para poder consultar sus alimentos prohibidos.',
+            };
         }
 
-        const prohibitedFoods = userDoc.data()?.foods;
-        return (prohibitedFoods as string[]) ?? [];
+        try {
+            const userDoc = await db.collection('prohibited-food').doc(userId).get();
+
+            if (!userDoc.exists) {
+                return {
+                    foods: [],
+                    needsUserId: false,
+                    message: `El usuario con ID ${userId} no tiene restricciones registradas en la base de datos.`,
+                };
+            }
+
+            const prohibitedFoods = (userDoc.data()?.foods as string[]) ?? [];
+            return {
+                foods: prohibitedFoods,
+                needsUserId: false,
+                message: `El usuario tiene las siguientes restricciones: ${prohibitedFoods.join(', ')}`,
+            };
+        } catch (error: any) {
+            console.warn(`[getProhibitedFoods] Aviso: No se pudo conectar a Firestore para el usuario ${userId}:`, error.message);
+            return {
+                foods: [],
+                needsUserId: false,
+                message: `No se pudo conectar a la base de datos: ${error.message}`,
+            };
+        }
     }
 );
 
@@ -110,7 +141,8 @@ export const foodSuggestionWithProhibitedFoodFlow = ai.defineFlow(
     },
     async (payload) => {
         try {
-            const prohibitedFoods = await getProhibitedFoodsTool({ userId: payload.userId });
+            const result = await getProhibitedFoodsTool({ userId: payload.userId });
+            const prohibitedFoods = result.foods;
 
             const prohibitedFoodsContext = prohibitedFoods.length > 0
                 ? `El usuario es alérgico a: ${prohibitedFoods.join(', ')}. **ASEGÚRATE DE EXCLUIR ESTOS INGREDIENTES. EN EL CASO TE INDIQUE UN ALIMENTO DE LA LISTA COMO ALIMENTO PRINCIPAL, NO GENERES NINGUNA RECETA.**`
@@ -132,15 +164,33 @@ export const foodSuggestionWithProhibitedFoodFlow = ai.defineFlow(
     }
 );
 
-
 export const nutritionCoachAgent = ai.defineAgent({
     name: 'nutritionCoachAgent',
     description: 'Coach interactivo de Food Fit para planificación de comidas saludables.',
     tools: [getProhibitedFoodsTool],
     system: `Eres el asistente experto en nutrición y cocina saludable de Food Fit.
-Tus responsabilidades:
-1. Ayudar al usuario a planificar sus comidas adaptadas a sus calorías o restricciones.
-2. Si el usuario pide ideas de recetas, usa 'getProhibitedFoodsTool' para consultar prohibiciones ali.
-3. Recuerda las preferencias expresadas en la conversación (ej. si es vegetariano, alérgico o busca ganar masa muscular).
-4. Sé conciso, alentador y prioriza ingredientes accesibles y métodos de cocción saludables.`,
+
+    En el caso te pida alguna receta, usa la herramienta getProhibitedFoods para obtener las restricciones del usuario.
+
+REGLAS CRÍTICAS DE IDENTIFICACIÓN:
+1. REQUISITO DE ID: Para sugerir recetas personalizadas o revisar alimentos prohibidos, debes usar la herramienta 'getProhibitedFoods'.
+2. SOLICITUD DE ID: Si la herramienta 'getProhibitedFoods' responde con needsUserId: true (o si aún no conoces el ID del usuario), NO des recetas todavía. Responde saludando y pidiéndole amablemente al usuario su ID de usuario para poder verificar sus restricciones antes de sugerir comidas.
+3. EXCLUSIÓN DE ALIMENTOS: Si la herramienta devuelve restricciones en 'foods', nunca incluyas ninguno de esos alimentos en tus recomendaciones.
+4. ESTILO: Sé conciso, empático y motivador, priorizando opciones saludables.`,
 });
+
+export const nutritionCoachFlow = ai.defineFlow(
+    {
+        name: 'nutritionCoachFlow',
+        inputSchema: z.object({
+            message: z.string().describe('Mensaje para el coach nutricional'),
+            userId: z.string().optional().describe('ID opcional del usuario'),
+        }),
+    },
+    async ({ message, userId }) => {
+        const chat = nutritionCoachAgent.chat();
+        const fullPrompt = userId ? `[Usuario ID: ${userId}] ${message}` : message;
+        const response = await chat.send(fullPrompt);
+        return response.text;
+    }
+);
