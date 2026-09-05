@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: ['.env.local', '.env'] });
 
 import { z, genkit, UserFacingError } from 'genkit/beta';
 import { inputSchema, inputSchemaWithProhibitedFood } from './schemas/input.schema';
