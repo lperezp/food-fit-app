@@ -129,6 +129,21 @@ export const generateImageFoodFlowFunction = onCallGenkit({
     cors: '*'
 }, generateImageFoodFlow);
 
+export const getProhibitedFoodsTool = ai.defineTool(
+    {
+        name: 'getProhibitedFoods',
+        description: 'Obtiene la lista de alimentos prohibidos o alergias del usuario desde Firestore.',
+        inputSchema: z.object({
+            userId: z.string().describe('ID del usuario a consultar en Firestore'),
+        }),
+        outputSchema: z.array(z.string()).describe('Lista de alimentos prohibidos o alergias'),
+    },
+    async ({ userId }) => {
+        const userDoc = await db.collection('prohibited-food').doc(userId).get();
+        return (userDoc.data()?.foods as string[]) ?? [];
+    }
+);
+
 export const foodSuggestionWithProhibitedFoodFlow = ai.defineFlow(
     {
         name: 'foodSuggestionWithProhibitedFoodFlow',
@@ -136,8 +151,7 @@ export const foodSuggestionWithProhibitedFoodFlow = ai.defineFlow(
         outputSchema: z.array(outputFoodItemSchema),
     },
     async (payload) => {
-        const userDoc = await db.collection('prohibited-food').doc(payload.userId).get();
-        const prohibitedFoods = userDoc.exists ? userDoc.data()?.foods : [];
+        const prohibitedFoods = await getProhibitedFoodsTool({ userId: payload.userId });
 
         const prohibitedFoodsContext = prohibitedFoods.length > 0
             ? `El usuario es alérgico a: ${prohibitedFoods.join(', ')}. **ASEGÚRATE DE EXCLUIR ESTOS INGREDIENTES. EN EL CASO TE INDIQUE UN ALIMENTO DE LA LISTA COMO ALIMENTO PRINCIPAL, NO GENERES NINGUNA RECETA.**`

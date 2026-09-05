@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-import { z, genkit, UserFacingError } from 'genkit';
+import { z, genkit, UserFacingError } from 'genkit/beta';
 import { inputSchema, inputSchemaWithProhibitedFood } from './schemas/input.schema';
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -81,6 +81,27 @@ export const generateImageFoodFlow = ai.defineFlow(
     }
 );
 
+export const getProhibitedFoodsTool = ai.defineTool(
+    {
+        name: 'getProhibitedFoods',
+        description: 'Obtiene la lista de alimentos prohibidos o alergias del usuario desde Firestore.',
+        inputSchema: z.object({
+            userId: z.string().describe('ID del usuario a consultar en Firestore'),
+        }),
+        outputSchema: z.array(z.string()).describe('Lista de alimentos prohibidos o alergias'),
+    },
+    async ({ userId }) => {
+        const userDoc = await db.collection('prohibited-food').doc(userId).get();
+
+        if (!userDoc.exists) {
+            throw new UserFacingError('UNAUTHENTICATED', 'No se encontraron datos del usuario.');
+        }
+
+        const prohibitedFoods = userDoc.data()?.foods;
+        return (prohibitedFoods as string[]) ?? [];
+    }
+);
+
 export const foodSuggestionWithProhibitedFoodFlow = ai.defineFlow(
     {
         name: 'foodSuggestionWithProhibitedFoodFlow',
@@ -89,13 +110,7 @@ export const foodSuggestionWithProhibitedFoodFlow = ai.defineFlow(
     },
     async (payload) => {
         try {
-            const userDoc = await db.collection('prohibited-food').doc(payload.userId).get();
-
-            if (!userDoc.exists) {
-                throw new UserFacingError('UNAUTHENTICATED', 'No se encontraron datos del usuario.');
-            }
-
-            const prohibitedFoods = userDoc.data()?.foods;
+            const prohibitedFoods = await getProhibitedFoodsTool({ userId: payload.userId });
 
             const prohibitedFoodsContext = prohibitedFoods.length > 0
                 ? `El usuario es alérgico a: ${prohibitedFoods.join(', ')}. **ASEGÚRATE DE EXCLUIR ESTOS INGREDIENTES. EN EL CASO TE INDIQUE UN ALIMENTO DE LA LISTA COMO ALIMENTO PRINCIPAL, NO GENERES NINGUNA RECETA.**`
@@ -112,7 +127,20 @@ export const foodSuggestionWithProhibitedFoodFlow = ai.defineFlow(
             }
             return output;
         } catch (error) {
-            throw new UserFacingError('UNAVAILABLE', error)
+            throw new UserFacingError('UNAVAILABLE', error);
         }
     }
 );
+
+
+export const nutritionCoachAgent = ai.defineAgent({
+    name: 'nutritionCoachAgent',
+    description: 'Coach interactivo de Food Fit para planificación de comidas saludables.',
+    tools: [getProhibitedFoodsTool],
+    system: `Eres el asistente experto en nutrición y cocina saludable de Food Fit.
+Tus responsabilidades:
+1. Ayudar al usuario a planificar sus comidas adaptadas a sus calorías o restricciones.
+2. Si el usuario pide ideas de recetas, usa 'getProhibitedFoodsTool' para consultar prohibiciones ali.
+3. Recuerda las preferencias expresadas en la conversación (ej. si es vegetariano, alérgico o busca ganar masa muscular).
+4. Sé conciso, alentador y prioriza ingredientes accesibles y métodos de cocción saludables.`,
+});
