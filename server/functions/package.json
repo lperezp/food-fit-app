@@ -20,6 +20,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@genkit-ai/a2ui": "^0.5.0",
     "@genkit-ai/dotprompt": "^0.9.12",
     "@genkit-ai/firebase": "^1.42.0",
     "@genkit-ai/google-genai": "^1.42.0",

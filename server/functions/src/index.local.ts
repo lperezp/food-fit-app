@@ -6,6 +6,7 @@ import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { outputListFoodItemSchema } from './schemas/output-list-food-item.schema';
 import { googleAI } from '@genkit-ai/google-genai';
+import { a2ui } from '@genkit-ai/a2ui';
 
 import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
 
@@ -172,6 +173,7 @@ export const nutritionCoachAgent = ai.defineAgent({
     name: 'nutritionCoachAgent',
     description: 'Coach interactivo de Food Fit para planificación de comidas saludables.',
     tools: [getProhibitedFoodsTool],
+    use: [a2ui()],
     system: `Eres el asistente experto en nutrición y cocina saludable de Food Fit.
 
     En el caso te pida alguna receta, usa la herramienta getProhibitedFoods para obtener las restricciones del usuario.
