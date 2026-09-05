@@ -32,7 +32,7 @@ export class FilterFoodPageComponent implements OnInit {
   async loadUserProhibitedFoods() {
     try {
       const currentUser = this.authService.getCurrentUser();
-      if (currentUser) {
+      if (currentUser?.uid) {
         const prohibitedFoods = await this.prohibitedFoodService.getProhibitedFoodsByUser(currentUser.uid);
         this.listFood = prohibitedFoods.map(food => food.name);
       }
@@ -52,7 +52,7 @@ export class FilterFoodPageComponent implements OnInit {
       this.error = null;
 
       const currentUser = this.authService.getCurrentUser();
-      if (!currentUser) {
+      if (!currentUser?.uid) {
         throw new Error('Usuario no autenticado');
       }
 
@@ -63,7 +63,7 @@ export class FilterFoodPageComponent implements OnInit {
         throw new Error('Este alimento ya está en tu lista de prohibidos');
       }
 
-      // Agregar el alimento a Firestore
+      // Agregar el alimento a Firestore asociado al uid del usuario
       await this.prohibitedFoodService.addProhibitedFood(currentUser.uid, { name: ingredientName });
 
       // Actualizar la lista local
@@ -72,7 +72,7 @@ export class FilterFoodPageComponent implements OnInit {
       // Limpiar el formulario
       this.formSearch.reset();
 
-      console.log('Alimento agregado exitosamente');
+      console.log(`Alimento "${ingredientName}" agregado exitosamente para el usuario ${currentUser.uid}`);
     } catch (error) {
       console.error('Error al agregar alimento:', error);
       this.error = error instanceof Error ? error.message : 'Error al agregar el alimento';
@@ -84,7 +84,7 @@ export class FilterFoodPageComponent implements OnInit {
   async removeFoodFromProhibited(foodName: string) {
     try {
       const currentUser = this.authService.getCurrentUser();
-      if (!currentUser) {
+      if (!currentUser?.uid) {
         throw new Error('Usuario no autenticado');
       }
 
@@ -93,7 +93,7 @@ export class FilterFoodPageComponent implements OnInit {
       // Actualizar la lista local
       this.listFood = this.listFood.filter(food => food !== foodName);
 
-      console.log('Alimento eliminado exitosamente');
+      console.log(`Alimento "${foodName}" eliminado exitosamente para el usuario ${currentUser.uid}`);
     } catch (error) {
       console.error('Error al eliminar alimento:', error);
       this.error = error instanceof Error ? error.message : 'Error al eliminar el alimento';

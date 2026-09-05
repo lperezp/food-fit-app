@@ -32,26 +32,21 @@ export class ProhibitedFoodService {
     return doc(this.db, this.collectionName, userId);
   }
 
-  // Agregar un nuevo alimento prohibido por usuario específico
+  // Agregar un nuevo alimento prohibido por usuario específico (asociado al uid)
   async addProhibitedFood(userId: string, prohibitedFood: ProhibitedFood): Promise<void> {
     try {
       const userDocRef = this.getUserDocRef(userId);
-      const docSnap = await getDoc(userDocRef);
 
-      if (docSnap.exists()) {
-        // Si el documento existe, agregar al array
-        await updateDoc(userDocRef, {
+      // Usar setDoc con merge: true garantiza crear o actualizar el array 'foods' atómicamente
+      await setDoc(
+        userDocRef,
+        {
           foods: arrayUnion(prohibitedFood.name)
-        });
-      } else {
-        // Si no existe, crear el documento con el array
-        await setDoc(userDocRef, {
-          foods: [prohibitedFood.name]
-        });
-      }
+        },
+        { merge: true }
+      );
 
-      console.log(`Alimento "${prohibitedFood.name}" agregado al array`);
-      console.log(`Ruta: prohibited-food/${userId}`);
+      console.log(`Alimento "${prohibitedFood.name}" agregado a prohibited-food/${userId}`);
     } catch (error) {
       console.error('Error al agregar alimento prohibido:', error);
       throw error;
