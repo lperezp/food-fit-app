@@ -2,49 +2,63 @@
 
 ![Angular](https://img.shields.io/badge/Angular-19.0.0-DD0031?style=for-the-badge&logo=angular&logoColor=white)
 ![Firebase Genkit](https://img.shields.io/badge/Firebase-Genkit-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![Gemini](https://img.shields.io/badge/Google%20AI-Gemini%203.6%20Flash-4285F4?style=for-the-badge&logo=google&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-22.x-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge)
 
 ![Food Fit App Cover](cover.png "Food Fit App Cover")
 
-**Food Fit** is an intelligent recipe generation application that showcases the power of **Firebase Genkit** for building AI-powered applications. This project demonstrates advanced AI workflows using **Google's Gemini models** for recipe generation and **Imagen** for food photography, all orchestrated through Genkit's powerful flow system.
+**Food Fit** is an intelligent recipe generation and nutrition coaching application showcasing the power of **Firebase Genkit** for building state-of-the-art AI applications. The project demonstrates advanced AI workflows using **Google's Gemini models** for recipe recommendations, autonomous **Nutrition Coach AI agents** with dynamic tool calling, and **Gemini Flash Image** for realistic food photography, all orchestrated via Genkit's robust flow and agent ecosystem.
 
-Built with [Angular](https://angular.dev/) for the frontend and [Firebase Genkit](https://firebase.google.com/docs/genkit) deployed on [Cloud Functions](https://firebase.google.com/docs/functions), this application represents a complete AI-powered food recommendation system.
+Built with [Angular 19](https://angular.dev/) for the frontend and [Firebase Genkit](https://firebase.google.com/docs/genkit) running on [Cloud Functions](https://firebase.google.com/docs/functions) (Node 22), this application represents an end-to-end, production-ready AI food assistant.
 
-📖 **Learn More**: Check out this [article](https://medium.com/@lperezp/food-fit-your-partner-for-healthy-eating-with-genkit-2cbd29702bd5) about the development process. If you wish to read it in spanish, check this [article](https://lperezp.medium.com/food-fit-tu-partner-para-tener-una-alimentaci%C3%B3n-saludable-con-genkit-140d7cd25a22).
+📖 **Learn More**: Check out the original [article](https://medium.com/@lperezp/food-fit-your-partner-for-healthy-eating-with-genkit-2cbd29702bd5) about the development process. If you wish to read it in Spanish, read this [article](https://lperezp.medium.com/food-fit-tu-partner-para-tener-una-alimentaci%C3%B3n-saludable-con-genkit-140d7cd25a22).
 
-## Firebase Genkit Integration
+---
+
+## 🏗️ Architecture & Firebase Genkit Integration
 
 ![Application Architecture](application_architecture.png "Application Architecture")
 
 ### 📸 Screenshots
 
-
-| Recipe Generation | Prohibited Foods |
+| Recipe Generation | Prohibited Foods Management |
 |:---:|:---:|
 | ![Recipe Generation](recipe_generation.png) | ![Prohibited Foods](prohibited_foods.png) |
 
-### Core AI Capabilities
-This application showcases **Firebase Genkit**'s powerful AI orchestration capabilities through multiple specialized flows:
+---
 
-#### **Intelligent Recipe Generation Flows**
-- **`foodSuggestionFlow`**: Base recipe generation using Gemini
-- **`foodSuggestionWithProhibitedFoodFlow`**: Advanced flow with user restriction awareness
-- **`listFoodsSuggestionFlow`**: Recipe recommendations
-- **`generateImageFoodFlow`**: AI-powered food photography using Google's Imagen model
+## ⚡ Core AI Capabilities
 
-#### **Smart Safety & Personalization**
-- **Context-Aware Prompting**: Dynamic system prompts based on user dietary restrictions
-- **Structured Output**: Type-safe recipe generation with Zod schema validation
-- **Temperature Control**: Optimized model parameters for consistent, safe outputs
+Food Fit leverages **Firebase Genkit**'s generative AI orchestration, beta Agent system, Dotprompt engine, and tool-calling capabilities:
 
-#### **Technical Implementation**
-- **Multi-Model Architecture**: Combines Gemini 2.0 Flash (text) + Imagen 3 (images)
-- **Vertex AI Integration**:  AI model access through Vertex AI
-- **Firebase Telemetry**: Built-in monitoring and observability
-- **Cloud Functions Deployment**: Serverless scaling with automatic HTTPS endpoints
-- **CORS Support**: Cross-origin requests for seamless frontend integration
+### 1. Specialized Genkit Flows
+- **`foodSuggestionFlow`**: Base recipe generation using Gemini 3.6 Flash tailored to requested ingredients and portion sizes.
+- **`foodSuggestionWithProhibitedFoodFlow`**: Restriction-aware recipe flow that queries Firestore via `getProhibitedFoodsTool` to strictly exclude allergens and banned ingredients.
+- **`listFoodsSuggestionFlow`**: Automated curated list of healthy recipes for daily meal planning.
+- **`generateImageFoodFlow`**: Food photography generation using `googleai/gemini-3.1-flash-image`.
+- **`nutritionCoachFlow`**: Interactive conversational flow routing user prompts to the autonomous Nutrition Coach agent.
 
-#### **Structured Data Output**
+### 2. Autonomous Nutrition Coach Agent & Tools
+- **`nutritionCoachAgent` (`ai.defineAgent`)**: Interactive nutrition coach capable of conversing empathetically, gathering user context, and planning healthy meals while strictly enforcing dietary boundaries.
+- **`getProhibitedFoods` (`ai.defineTool`)**: Reusable Genkit tool that queries Firestore in real-time by `userId` to retrieve user-specific allergies or excluded foods before recipes are suggested.
+
+### 3. Smart Safety & Personalization
+- **Context-Aware Safety**: Strict system instructions ensure that any prohibited foods or allergies are never included in recipe suggestions or coach responses.
+- **Prompt Engineering with Dotprompt**: Modularized `.prompt` templates stored in `server/functions/prompts/` for maintainable schema definition and prompt versioning.
+- **Structured Outputs**: Type-safe recipe outputs enforced by **Zod** schemas.
+- **Deterministic Quality**: Fine-tuned temperature control for consistent, reliable culinary results.
+
+### 4. Technical Stack Highlights
+- **Multi-Model Architecture**: `googleai/gemini-3.6-flash` (reasoning, recipes, agent chat) + `googleai/gemini-3.1-flash-image` (media generation).
+- **Google AI Plugin**: Streamlined direct model access through `@genkit-ai/google-genai` and `@genkit-ai/googleai`.
+- **Firebase Telemetry**: Native observability, tracing, and metrics for all AI invocations.
+- **Serverless Cloud Functions**: 2nd Gen HTTPS endpoints (`onCallGenkit` & `onRequest`) with CORS support and secret management.
+
+---
+
+### Structured Data Output Schema
+
 ```typescript
 // Example recipe schema generated by Genkit
 {
@@ -65,136 +79,168 @@ This application showcases **Firebase Genkit**'s powerful AI orchestration capab
 }
 ```
 
-##  Features
+---
 
-### Authentication System
-- **Google OAuth Integration**: Users can now sign in with their Google accounts
-- **User Session Management**: Persistent authentication state across app sessions
-- **Secure Logout**: Clean session termination functionality
+## 🌟 Application Features
 
-### Prohibited Foods Management
-- **Personal Food Restrictions**: Users can add and manage their personal list of prohibited foods
-- **Real-time Updates**: Add or remove prohibited foods with instant UI updates
-- **User-specific Storage**: Each user's prohibited foods are stored securely in Firestore
+### 🤖 AI Nutrition Coach (Chat)
+- **Floating Interactive Chat**: Floating assistant available across all pages (`app-chat-coach`).
+- **Context-Aware Recommendations**: Checks the authenticated user's ID and restrictions before suggesting meals.
+- **Quick-Prompt Suggestions**: One-tap query chips for quick healthy breakfast, lunch, and dinner ideas.
 
-### Firebase Integration
-- **Firestore Database**: Robust cloud database for storing user data and preferences
-- **Firebase Authentication**: Secure user authentication with Google provider
+### 🔒 Prohibited Foods & Allergy Management
+- **Personalized Restrictions**: Users can define, add, and remove ingredients they cannot or do not want to consume.
+- **Atomic Cloud Updates**: Uses Firestore `arrayUnion` and `arrayRemove` for instant, consistent updates.
+- **Cross-Feature Enforcement**: Automatically observed by both recipe generation flows and the AI Nutrition Coach.
 
-## Project Structure
+### 🔑 Authentication & Profile Sync
+- **Google OAuth**: Secure sign-in with Google via Firebase Authentication.
+- **Session Persistence**: Persistent auth state synchronized across browser sessions and linked to Firestore records.
+
+---
+
+## 📂 Project Structure
 
 ```
 food-fit/
-├── food-fit-app/        # Angular frontend application
-│   ├── public/          # Static assets
-│   └── src/             # Source code
-│       ├── app/         # Angular components
-│       │   ├── components/  # Reusable components
-│       │   ├── pages/       # Page components
-│       │   └── services/    # Angular services
-│       └── ...
-└── server/              # Backend server code
-    └── functions/       # Cloud Functions
-        ├── lib/         # Compiled JavaScript
-        └── src/         # TypeScript source
-            └── schemas/ # API schemas
+├── food-fit-app/                  # Angular 19 frontend application
+│   ├── public/                    # Static public assets
+│   └── src/                       # Frontend source code
+│       ├── app/
+│       │   ├── components/        # Reusable UI components
+│       │   │   ├── chat-coach/    # AI Nutrition Coach chat widget
+│       │   │   └── header/        # Application header & navigation
+│       │   ├── pages/             # Page components (home, search, menu, etc.)
+│       │   └── services/          # Angular services (auth, food, firestore)
+│       └── environments/          # Firebase & environment config
+└── server/                        # Backend server & AI workflows
+    └── functions/                 # Firebase Cloud Functions (Node 22)
+        ├── prompts/               # Dotprompt templates (.prompt files)
+        ├── src/
+        │   ├── schemas/           # Zod input & output schemas
+        │   ├── index.ts           # Production Cloud Functions definitions
+        │   └── index.local.ts     # Local Genkit development server
+        └── lib/                   # Compiled JavaScript output
 ```
 
-## Installation
+---
 
-To set up the project, follow these steps:
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- Angular CLI (`npm install -g @angular/cli`)
-- Firebase CLI (`npm install -g firebase-tools`)
+- **Node.js**: v20 or v22 (Cloud Functions runs on Node 22)
+- **Angular CLI**: `npm install -g @angular/cli`
+- **Firebase CLI**: `npm install -g firebase-tools`
+- **Google AI Studio API Key**: Get an API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
 
-### Main Application
+---
 
-Navigate to the `food-fit-app` folder and run:
+### Installation
 
+#### 1. Clone the repository
+```bash
+git clone https://github.com/lperezp/food-fit-app.git
+cd food-fit-app
 ```
+
+#### 2. Frontend Setup
+```bash
 cd food-fit-app
 npm install
 ```
 
-### Cloud Functions
-
-Navigate to the `server/functions` folder and run:
-
-```
-cd server/functions
+#### 3. Backend / Cloud Functions Setup
+```bash
+cd ../server/functions
 npm install
 ```
 
-### Firebase Configuration
+---
 
-1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
-2. Enable Authentication with Google provider
-3. Create a Firestore database
-4. Update the Firebase configuration in `src/environments/environment.ts`
+### Environment & Firebase Configuration
 
-## Usage
+1. Create a Firebase project at the [Firebase Console](https://console.firebase.google.com/).
+2. Enable **Authentication** (Google provider) and create a **Cloud Firestore** database.
+3. Update frontend Firebase configuration in `food-fit-app/src/environments/environment.ts`:
+   ```typescript
+   export const environment = {
+     production: false,
+     firebaseConfig: {
+       apiKey: "YOUR_API_KEY",
+       authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+       projectId: "YOUR_PROJECT_ID",
+       storageBucket: "YOUR_PROJECT_ID.appspot.com",
+       messagingSenderId: "YOUR_SENDER_ID",
+       appId: "YOUR_APP_ID"
+     }
+   };
+   ```
+4. In `server/functions/`, create a `.env` or `.env.local` file:
+   ```env
+   GOOGLE_GENAI_API_KEY=your_google_ai_studio_api_key
+   ```
 
-### Main Application
+---
 
-Navigate to the `food-fit-app` folder and run:
+## 💻 Running the Application
 
-```
+### 1. Run Angular Frontend
+```bash
 cd food-fit-app
 ng serve
 ```
+Open [http://localhost:4200](http://localhost:4200) in your browser.
 
-Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
-
-### Cloud Functions
-
-Follow the [guide](https://firebase.google.com/docs/genkit/cloud-run#make_api_credentials_available_to_deployed_flows) to generate the API KEY for deployment. Navigate to the `server/functions` folder and run:
-
-```
+### 2. Run Cloud Functions Locally (Firebase Emulators)
+```bash
 cd server/functions
 npm run serve
 ```
 
+---
+
 ## 🤖 Running Genkit Development Mode
 
-Genkit provides a powerful development environment for testing and debugging AI flows:
+Genkit includes an interactive Developer UI for inspecting, debugging, and executing flows, agents, tools, and prompts in real-time.
 
-### Prerequisites
-1. Generate an API key for the Gemini API using [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. Create a `.env` file in `server/functions/` with:
-   ```
-   GOOGLE_GENAI_API_KEY=your_api_key_here
-   ```
-
-### Start Genkit Dev UI
 ```bash
 cd server/functions
 npm run genkit:dev
 ```
 
-This launches the **Genkit Developer UI** where you can:
-- **Test AI Flows**: Interactive testing of all recipe generation flows
-- **Monitor Performance**: Real-time flow execution metrics
-- **Debug Prompts**: Inspect and modify AI prompts in real-time
-- **Telemetry**: Comprehensive logging and tracing
-- **Schema Validation**: Test input/output schemas interactively
-- **Flow Visualization**: See the complete AI workflow execution
+This starts the Genkit Developer UI (usually at [http://localhost:4000](http://localhost:4000)) where you can:
+- **Test AI Flows**: Execute `foodSuggestionFlow`, `foodSuggestionWithProhibitedFoodFlow`, etc.
+- **Inspect Agents**: Converse interactively with `nutritionCoachAgent`.
+- **Debug Tools**: Test `getProhibitedFoods` tool responses with various `userId` values.
+- **Live Trace & Telemetry**: Inspect step-by-step model calls, prompt rendering, latency, and tokens.
+- **Schema Validation**: Verify input and output payloads against defined Zod schemas.
 
-### Available Genkit Flows
-- **foodSuggestionFlow**: Basic recipe generation
-- **foodSuggestionWithProhibitedFoodFlow**: Allergy-aware recipes
-- **listFoodsSuggestionFlow**: Multiple recipe suggestions
-- **generateImageFoodFlow**: AI-generated food images
+---
 
-## Contributing
+## 🚢 Deployment
+
+### Deploy Cloud Functions
+Ensure you set the Google AI API key secret in Firebase Functions:
+```bash
+cd server/functions
+firebase functions:secrets:set GOOGLE_GENAI_API_KEY
+npm run deploy
+```
+
+### Deploy Frontend
+```bash
+cd food-fit-app
+npm run deploy
+```
+
+---
+
+## 🤝 Contributing
 
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/lperezp/food-fit-app/pulls)
 
-All contributions are welcome! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for project guidelines. You can submit any ideas as [pull requests](https://github.com/lperezp/food-fit-app/pulls) or as [GitHub issues](https://github.com/lperezp/food-fit-app/issues).
-
-If you want to contribute to the project, here are the basic steps:
+All contributions are welcome! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for project guidelines. You can submit ideas as [pull requests](https://github.com/lperezp/food-fit-app/pulls) or [GitHub issues](https://github.com/lperezp/food-fit-app/issues).
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -202,12 +248,16 @@ If you want to contribute to the project, here are the basic steps:
 4. Push the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## License
+---
+
+## 📄 License
 
 This project is licensed under the [Apache License 2.0](LICENSE). You can use, modify, and distribute this code following the terms of the license.
 
-## Author
+---
 
-- [Luis Eduardo](https://lperezp.dev/?utm_source=food-fit-app&utm_medium=readme&utm_campaign=food-fit-app&utm_id=github)
+## 👤 Author
 
-**Do you like food-fit-app? Give our repository a star :star: :arrow_up:.**
+- **Luis Eduardo** - [lperezp.dev](https://lperezp.dev/?utm_source=food-fit-app&utm_medium=readme&utm_campaign=food-fit-app&utm_id=github)
+
+⭐ **Do you like Food Fit App? Give our repository a star!**
