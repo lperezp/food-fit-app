@@ -1,5 +1,4 @@
 import { defineSecret } from "firebase-functions/params";
-import { imagen3, vertexAI } from '@genkit-ai/vertexai';
 import { googleAI } from '@genkit-ai/google-genai';
 import { genkit, z } from 'genkit/beta';
 import { onCallGenkit, onRequest } from "firebase-functions/https";
@@ -14,7 +13,6 @@ enableFirebaseTelemetry();
 
 const ai = genkit({
     plugins: [
-        vertexAI({ location: 'us-central1' }),
         googleAI(),
     ],
     model: 'googleai/gemini-3.6-flash',
@@ -110,7 +108,7 @@ const generateImageFoodFlow = ai.defineFlow(
     },
     async (payload) => {
         const response = await ai.generate({
-            model: imagen3,
+            model: 'googleai/gemini-3.1-flash-image',
             prompt: `Photo of the Peruvian dish ${payload.food}`,
             output: { format: 'media' },
         });
