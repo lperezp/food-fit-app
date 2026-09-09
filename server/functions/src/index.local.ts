@@ -1,20 +1,28 @@
-require('dotenv').config({ path: ['.env.local', '.env'] });
+require('dotenv')
 
 import { z, genkit, UserFacingError } from 'genkit/beta';
 import { inputSchema, inputSchemaWithProhibitedFood } from './schemas/input.schema';
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { outputListFoodItemSchema } from './schemas/output-list-food-item.schema';
-import { googleAI } from '@genkit-ai/google-genai';
+import { createMcpHost } from '@genkit-ai/mcp';
+import { ollama } from 'genkitx-ollama';
+import path from 'path';
 
 import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
 
 enableFirebaseTelemetry();
 
+const OLLAMA_MODEL = 'ollama/gemma4:12b';
+const OLLAMA_SERVER = 'http://127.0.0.1:11434';
+
 const ai = genkit({
-    plugins: [googleAI()],
-    promptDir: 'prompts',
-    model: 'googleai/gemini-3.6-flash',
+    plugins: [
+        ollama({
+            models: [{ name: OLLAMA_MODEL }],
+            serverAddress: OLLAMA_SERVER,
+        }),
+    ],
 });
 
 if (!getApps().length) {
@@ -195,6 +203,37 @@ export const nutritionCoachFlow = ai.defineFlow(
         const chat = nutritionCoachAgent.chat();
         const fullPrompt = userId ? `[Usuario ID: ${userId}] ${message}` : message;
         const response = await chat.send(fullPrompt);
+        return response.text;
+    }
+);
+
+const mcpHost = createMcpHost({
+    name: 'myHost',
+    mcpServers: {
+        fs: {
+            command: 'npx',
+            args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
+            cwd: path.resolve('/Users/luiseduardo/Downloads/MCP'),
+        },
+    },
+});
+
+export const analyzeDirectoryFlow = ai.defineFlow(
+    {
+        name: 'analyzeDirectoryFlow',
+        inputSchema: z.string(),
+        outputSchema: z.string(),
+    },
+    async (prompt) => {
+        // Obtener las herramientas que expone el servidor MCP
+        const mcpTools = await mcpHost.getActiveTools(ai);
+
+        const response = await ai.generate({
+            model: OLLAMA_MODEL,
+            prompt,
+            tools: mcpTools,
+        });
+
         return response.text;
     }
 );
