@@ -1,16 +1,16 @@
 # Food Fit App powered by Firebase Genkit
 
-![Angular](https://img.shields.io/badge/Angular-19.0.0-DD0031?style=for-the-badge&logo=angular&logoColor=white)
+![Angular](https://img.shields.io/badge/Angular-22.2.1-DD0031?style=for-the-badge&logo=angular&logoColor=white)
 ![Firebase Genkit](https://img.shields.io/badge/Firebase-Genkit-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
 ![Gemini](https://img.shields.io/badge/Google%20AI-Gemini%203.6%20Flash-4285F4?style=for-the-badge&logo=google&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-22.x-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-24.x-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge)
 
 ![Food Fit App Cover](cover.png "Food Fit App Cover")
 
 **Food Fit** is an intelligent recipe generation and nutrition coaching application showcasing the power of **Firebase Genkit** for building state-of-the-art AI applications. The project demonstrates advanced AI workflows using **Google's Gemini models** for recipe recommendations, autonomous **Nutrition Coach AI agents** with dynamic tool calling, and **Gemini Flash Image** for realistic food photography, all orchestrated via Genkit's robust flow and agent ecosystem.
 
-Built with [Angular 19](https://angular.dev/) for the frontend and [Firebase Genkit](https://firebase.google.com/docs/genkit) running on [Cloud Functions](https://firebase.google.com/docs/functions) (Node 22), this application represents an end-to-end, production-ready AI food assistant.
+Built with [Angular 22](https://angular.dev/) for the frontend and [Firebase Genkit](https://firebase.google.com/docs/genkit) running on [Cloud Functions](https://firebase.google.com/docs/functions) (Node 22), this application represents an end-to-end, production-ready AI food assistant.
 
 📖 **Learn More**: Check out the original [article](https://medium.com/@lperezp/food-fit-your-partner-for-healthy-eating-with-genkit-2cbd29702bd5) about the development process. If you wish to read it in Spanish, read this [article](https://lperezp.medium.com/food-fit-tu-partner-para-tener-una-alimentaci%C3%B3n-saludable-con-genkit-140d7cd25a22).
 
@@ -18,7 +18,46 @@ Built with [Angular 19](https://angular.dev/) for the frontend and [Firebase Gen
 
 ## 🏗️ Architecture & Firebase Genkit Integration
 
-![Application Architecture](application_architecture.png "Application Architecture")
+```mermaid
+flowchart TD
+    subgraph Frontend["Frontend"]
+        UI["Angular Client App"]
+    end
+
+    subgraph FirebaseServices["Firebase Platform"]
+        Auth["Firebase Authentication<br/>(Google OAuth)"]
+        Firestore[("Cloud Firestore<br/>(users & prohibited-food collections)")]
+    end
+
+    subgraph Backend["Backend Orchestration (Cloud Functions - Node 22)"]
+        GenkitCore["Firebase Genkit Engine<br/>(Google AI Plugin & Telemetry)"]
+        
+        subgraph Flows["Genkit Flows & Agents"]
+            Agent["Nutrition Coach Agent<br/>(ai.defineAgent)"]
+            Tool["getProhibitedFoodsTool<br/>(ai.defineTool)"]
+            FlowRecipes["foodSuggestionFlows<br/>(Zod Schema Validation)"]
+            FlowImage["generateImageFoodFlow<br/>(Media Output)"]
+        end
+    end
+
+    subgraph GoogleAI["Google AI Studio Models"]
+        GeminiFlash["Gemini 3.6 Flash<br/>(Reasoning, Structured Recipes & Chat Agent)"]
+        GeminiImage["Gemini 3.1 Flash Image<br/>(Food Photography Generation)"]
+    end
+
+    UI -->|"1. User Authentication"| Auth
+    UI -->|"2. Sync profile & restrictions"| Firestore
+    UI -->|"3. Invokes AI flows (onCallGenkit / onRequest)"| GenkitCore
+
+    GenkitCore --> Flows
+    Agent -->|"Checks dietary restrictions"| Tool
+    FlowRecipes -->|"Enforces excluded foods"| Tool
+    Tool -->|"Real-time query by userId"| Firestore
+
+    FlowRecipes -->|"Structured recipe prompt"| GeminiFlash
+    Agent -->|"Conversational reasoning"| GeminiFlash
+    FlowImage -->|"Visual dish prompt"| GeminiImage
+```
 
 ### 📸 Screenshots
 
@@ -84,7 +123,7 @@ Food Fit leverages **Firebase Genkit**'s generative AI orchestration, beta Agent
 ## 🌟 Application Features
 
 ### 🤖 AI Nutrition Coach (Chat)
-- **Floating Interactive Chat**: Floating assistant available across all pages (`app-chat-coach`).
+- **Floating Interactive Chat**: Context-aware floating assistant (`app-chat-coach`), conditionally displayed only for authenticated users on internal pages (hidden on landing page).
 - **Context-Aware Recommendations**: Checks the authenticated user's ID and restrictions before suggesting meals.
 - **Quick-Prompt Suggestions**: One-tap query chips for quick healthy breakfast, lunch, and dinner ideas.
 
@@ -95,7 +134,7 @@ Food Fit leverages **Firebase Genkit**'s generative AI orchestration, beta Agent
 
 ### 🔑 Authentication & Profile Sync
 - **Google OAuth**: Secure sign-in with Google via Firebase Authentication.
-- **Session Persistence**: Persistent auth state synchronized across browser sessions and linked to Firestore records.
+- **Signal-Driven Reactive State**: Angular Signals-backed authentication state in `AuthService` synchronized with Firestore user records and persistent browser storage.
 
 ---
 
@@ -103,17 +142,19 @@ Food Fit leverages **Firebase Genkit**'s generative AI orchestration, beta Agent
 
 ```
 food-fit/
-├── food-fit-app/                  # Angular 19 frontend application
-│   ├── public/                    # Static public assets
+├── food-fit-app/                  # Angular 22 frontend application
+│   ├── public/                    # Static public assets (icons, brand images, background)
 │   └── src/                       # Frontend source code
 │       ├── app/
 │       │   ├── components/        # Reusable UI components
-│       │   │   ├── chat-coach/    # AI Nutrition Coach chat widget
+│       │   │   ├── chat-coach/    # AI Nutrition Coach floating chat widget
 │       │   │   └── header/        # Application header & navigation
-│       │   ├── pages/             # Page components (home, search, menu, etc.)
-│       │   └── services/          # Angular services (auth, food, firestore)
+│       │   ├── config/            # Firebase client config & initialization
+│       │   ├── pages/             # Page components (home, menu, search, detail-food, filter-food, list-food)
+│       │   └── services/          # Angular services (auth, firestore, food, prohibited-food)
 │       └── environments/          # Firebase & environment config
 └── server/                        # Backend server & AI workflows
+    ├── firebase.json              # Firebase Functions configuration
     └── functions/                 # Firebase Cloud Functions (Node 22)
         ├── prompts/               # Dotprompt templates (.prompt files)
         ├── src/
@@ -129,7 +170,7 @@ food-fit/
 
 ### Prerequisites
 
-- **Node.js**: v20 or v22 (Cloud Functions runs on Node 22)
+- **Node.js**: v24.21.0+ recommended for frontend (Cloud Functions runs on Node 22)
 - **Angular CLI**: `npm install -g @angular/cli`
 - **Firebase CLI**: `npm install -g firebase-tools`
 - **Google AI Studio API Key**: Get an API key from [Google AI Studio](https://aistudio.google.com/app/apikey)

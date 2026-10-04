@@ -1,6 +1,6 @@
 # FoodFitApp
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.0.2.
+This project was updated to [Angular CLI](https://github.com/angular/angular-cli) version 22.2.1.
 
 ## Development server
 
