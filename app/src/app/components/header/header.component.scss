@@ -1,12 +1,58 @@
 .header {
+    position: relative;
     height: 60px;
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 0 20px;
     box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
 
     img {
         height: 40px;
         width: auto;
+    }
+
+    &__cart-btn {
+        position: absolute;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid #CAE3F1;
+        background-color: #fff8e1;
+        color: #141516;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.15s, background-color 0.2s;
+
+        &:hover {
+            background-color: #ffa000;
+            transform: scale(1.05);
+        }
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+
+    &__cart-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        min-width: 19px;
+        height: 19px;
+        padding: 0 5px;
+        border-radius: 999px;
+        background-color: #22719E;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 700;
+        border: 2px solid #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 }

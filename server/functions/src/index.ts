@@ -9,6 +9,7 @@ import { listFoodsSuggestionFlow } from './flows/list-foods.flow';
 import { generateImageFoodFlow } from './flows/generate-image.flow';
 import { nutritionCoachFlow } from './flows/nutrition-coach.flow';
 import { getProhibitedFoodsTool } from './tools/prohibited-foods.tool';
+import { getAvailableProductsTool } from './tools/genkit-store.tool';
 import { nutritionCoachAgent } from './agents/nutrition-coach.agent';
 
 const googleAIapiKey = defineSecret('GOOGLE_GENAI_API_KEY');
@@ -21,6 +22,7 @@ export {
     generateImageFoodFlow,
     nutritionCoachFlow,
     getProhibitedFoodsTool,
+    getAvailableProductsTool,
     nutritionCoachAgent,
 };
 
@@ -67,6 +69,7 @@ export const nutritionCoachFlowFunction = onCallGenkit(
         authPolicy: () => true,
         secrets: [googleAIapiKey],
         cors: '*',
+        timeoutSeconds: 120,
     },
     nutritionCoachFlow
 );

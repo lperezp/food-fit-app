@@ -6,7 +6,11 @@ import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
 
 dotenv.config({ path: ['.env.local', '.env'] });
 
-enableFirebaseTelemetry();
+if (process.env.K_SERVICE || process.env.FUNCTION_TARGET) {
+    enableFirebaseTelemetry({
+        projectId: process.env.GCLOUD_PROJECT || 'food-fit-with-genkit',
+    });
+}
 
 export const ai = genkit({
     plugins: [googleAI()],

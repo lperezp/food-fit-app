@@ -3,13 +3,16 @@
   type="button" 
   class="chat-floating-btn" 
   (click)="toggleChat()" 
-  [attr.aria-label]="isOpen ? 'Cerrar chat de coach' : 'Abrir chat con coach nutricional'"
-  [class.chat-floating-btn--active]="isOpen">
-  @if (!isOpen) {
+  [attr.aria-label]="(isOpen() || cartService.isCartOpen()) ? 'Cerrar chat de coach' : 'Abrir chat con coach nutricional'"
+  [class.chat-floating-btn--active]="isOpen() || cartService.isCartOpen()">
+  @if (!(isOpen() || cartService.isCartOpen())) {
     <svg class="chat-floating-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
     </svg>
     <span class="chat-floating-btn__badge">Coach</span>
+    @if (cartService.totalItemsCount() > 0) {
+      <span class="chat-floating-btn__cart-pill">{{ cartService.totalItemsCount() }}</span>
+    }
   } @else {
     <svg class="chat-floating-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -18,96 +21,322 @@
   }
 </button>
 
-<!-- Ventana modal / panel del chat -->
-@if (isOpen) {
-  <div class="chat-window">
-    <!-- Header del chat -->
+<!-- Ventana modal / panel del chat y carrito -->
+@if (isOpen() || cartService.isCartOpen()) {
+  <div class="chat-window" [class.chat-window--maximized]="isMaximized()">
+    <!-- Header -->
     <header class="chat-header">
       <div class="chat-header__info">
-        <div class="chat-header__avatar">
-          <span>🥑</span>
-          <span class="chat-header__status-dot"></span>
-        </div>
-        <div class="chat-header__titles">
-          <h3 class="chat-header__name">Food Fit Coach</h3>
-          <span class="chat-header__status">Asistente de Nutrición IA</span>
-        </div>
-      </div>
-      <button type="button" class="chat-header__close-btn" (click)="closeChat()" aria-label="Cerrar ventana">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
-    </header>
-
-    <!-- Lista de mensajes -->
-    <div class="chat-messages" #messagesContainer>
-      @for (msg of messages; track $index) {
-        <div class="chat-message" [ngClass]="{'chat-message--user': msg.sender === 'user', 'chat-message--coach': msg.sender === 'coach'}">
-          @if (msg.sender === 'coach') {
-            <div class="chat-message__avatar">🥑</div>
-          }
-          <div class="chat-message__content">
-            <div class="chat-message__bubble">
-              <p class="chat-message__text">{{ msg.text }}</p>
-            </div>
-            <span class="chat-message__time">{{ msg.time }}</span>
+        @if (cartService.isCartOpen()) {
+          <button type="button" class="chat-header__back-btn" (click)="backToChat()" aria-label="Volver al chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <div class="chat-header__titles">
+            <h3 class="chat-header__name">Carrito Genkit Store</h3>
+            <span class="chat-header__status">{{ cartService.totalItemsCount() }} producto(s) guardados</span>
           </div>
-        </div>
-      }
-
-      <!-- Indicador de escribiendo (Loading) -->
-      @if (isLoading) {
-        <div class="chat-message chat-message--coach">
-          <div class="chat-message__avatar">🥑</div>
-          <div class="chat-message__content">
-            <div class="chat-message__bubble chat-message__bubble--typing">
-              <span class="typing-dot"></span>
-              <span class="typing-dot"></span>
-              <span class="typing-dot"></span>
-            </div>
+        } @else {
+          <div class="chat-header__avatar">
+            <span>🥑</span>
+            <span class="chat-header__status-dot"></span>
           </div>
-        </div>
-      }
-    </div>
-
-    <!-- Sugerencias rápidas (si hay pocos mensajes) -->
-    @if (messages.length <= 2 && !isLoading) {
-      <div class="chat-suggestions">
-        <span class="chat-suggestions__label">Preguntas rápidas:</span>
-        <div class="chat-suggestions__chips">
-          @for (suggestion of suggestedQuestions; track $index) {
-            <button type="button" class="chat-suggestions__chip" (click)="sendSuggestion(suggestion)">
-              {{ suggestion }}
-            </button>
-          }
-        </div>
+          <div class="chat-header__titles">
+            <h3 class="chat-header__name">Food Fit Coach</h3>
+            <span class="chat-header__status">Asistente de Nutrición IA</span>
+          </div>
+        }
       </div>
-    }
 
-    <!-- Input bar / Footer -->
-    <footer class="chat-footer">
-      <form class="chat-footer__form" (ngSubmit)="sendMessage()">
-        <input 
-          type="text" 
-          name="userMessage"
-          [(ngModel)]="currentMessage" 
-          placeholder="Escribe tu consulta sobre comidas..." 
-          class="chat-footer__input"
-          [disabled]="isLoading"
-          autocomplete="off" />
+      <div class="chat-header__actions">
+        @if (!cartService.isCartOpen()) {
+          <button type="button" class="chat-header__cart-btn" (click)="openCartSummary()" aria-label="Ver carrito de compras">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            @if (cartService.totalItemsCount() > 0) {
+              <span class="chat-header__cart-count">{{ cartService.totalItemsCount() }}</span>
+            }
+          </button>
+        }
         <button 
-          type="submit" 
-          class="chat-footer__send-btn" 
-          [disabled]="!currentMessage.trim() || isLoading"
-          aria-label="Enviar mensaje">
+          type="button" 
+          class="chat-header__expand-btn" 
+          (click)="toggleMaximize()" 
+          [attr.aria-label]="isMaximized() ? 'Restaurar tamaño' : 'Maximizar chat'"
+          [title]="isMaximized() ? 'Restaurar tamaño' : 'Maximizar chat'">
+          @if (!isMaximized()) {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="4 14 10 14 10 20"></polyline>
+              <polyline points="20 10 14 10 14 4"></polyline>
+              <line x1="14" y1="10" x2="21" y2="3"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          }
+        </button>
+        <button type="button" class="chat-header__close-btn" (click)="closeChat()" aria-label="Cerrar ventana">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
         </button>
-      </form>
-    </footer>
+      </div>
+    </header>
+
+    @if (cartService.isCartOpen()) {
+      <!-- VISTA: RESUMEN DEL CARRITO / CHECKOUT -->
+      <div class="cart-view">
+        @if (cartService.orderSuccess(); as order) {
+          <div class="cart-success">
+            <div class="cart-success__icon">🎉</div>
+            <h4 class="cart-success__title">¡Compra realizada con éxito!</h4>
+            <p class="cart-success__subtitle">Tu pedido en <strong>Genkit Store</strong> ha sido procesado.</p>
+            <div class="cart-success__receipt">
+              <div class="cart-success__row">
+                <span>Código de orden</span>
+                <strong>{{ order.orderCode }}</strong>
+              </div>
+              <div class="cart-success__row">
+                <span>Productos</span>
+                <strong>{{ order.itemsCount }} un.</strong>
+              </div>
+              <div class="cart-success__row cart-success__row--total">
+                <span>Total pagado</span>
+                <strong>S/ {{ order.total.toFixed(2) }}</strong>
+              </div>
+            </div>
+            <button type="button" class="cart-success__btn" (click)="backToChat()">
+              Volver al Coach Nutricional
+            </button>
+          </div>
+        } @else if (cartService.items().length === 0) {
+          <div class="cart-empty">
+            <div class="cart-empty__icon">🛒</div>
+            <h4 class="cart-empty__title">Tu carrito está vacío</h4>
+            <p class="cart-empty__text">Pídele una receta al Coach y agrega los ingredientes desde las cards de Genkit Store.</p>
+            <button type="button" class="cart-empty__btn" (click)="backToChat()">
+              Ir al chat
+            </button>
+          </div>
+        } @else {
+          <div class="cart-items-list">
+            @for (item of cartService.items(); track item.productId) {
+              <div class="cart-item">
+                <div class="cart-item__img-wrap">
+                  @if (item.imageUrl) {
+                    <img [src]="item.imageUrl" [alt]="item.name" class="cart-item__img" />
+                  } @else {
+                    <span>🛍️</span>
+                  }
+                </div>
+                <div class="cart-item__info">
+                  <span class="cart-item__brand">{{ item.brand }}</span>
+                  <h5 class="cart-item__name">{{ item.name }}</h5>
+                  @if (item.presentation) {
+                    <span class="cart-item__pres">{{ item.presentation }}</span>
+                  }
+                  <div class="cart-item__bottom">
+                    <div class="cart-item__prices">
+                      <span class="cart-item__subtotal">S/ {{ (item.unitFinalPrice * item.quantity).toFixed(2) }}</span>
+                      @if (item.unitRegularPrice > item.unitFinalPrice) {
+                        <span class="cart-item__regular">S/ {{ (item.unitRegularPrice * item.quantity).toFixed(2) }}</span>
+                      }
+                    </div>
+                    <div class="cart-item__controls">
+                      <button type="button" class="cart-item__qty-btn" (click)="cartService.decrementProduct(item.productId)" aria-label="Disminuir">
+                        -
+                      </button>
+                      <span class="cart-item__qty-val">{{ cartService.getFormattedPresentationQty(item, item.quantity) }}</span>
+                      <button type="button" class="cart-item__qty-btn cart-item__qty-btn--plus" (click)="cartService.addProduct(item)" aria-label="Aumentar">
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <button type="button" class="cart-item__delete" (click)="cartService.removeItem(item.productId)" aria-label="Eliminar producto">
+                  ✕
+                </button>
+              </div>
+            }
+          </div>
+
+          <div class="cart-summary">
+            <div class="cart-summary__row">
+              <span>Subtotal regular</span>
+              <span>S/ {{ cartService.subtotalRegular().toFixed(2) }}</span>
+            </div>
+            @if (cartService.totalDiscount() > 0) {
+              <div class="cart-summary__row cart-summary__row--discount">
+                <span>Ahorro Genkit Store</span>
+                <span>- S/ {{ cartService.totalDiscount().toFixed(2) }}</span>
+              </div>
+            }
+            <div class="cart-summary__row cart-summary__row--total">
+              <span>Total a pagar</span>
+              <span>S/ {{ cartService.totalFinal().toFixed(2) }}</span>
+            </div>
+            <div class="cart-summary__actions">
+              <button type="button" class="cart-summary__clear-btn" (click)="cartService.clearCart()">
+                Vaciar
+              </button>
+              <button type="button" class="cart-summary__checkout-btn" (click)="cartService.checkout()">
+                Confirmar compra • S/ {{ cartService.totalFinal().toFixed(2) }}
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <!-- VISTA: LISTA DE MENSAJES DEL CHAT -->
+      <div class="chat-messages" #messagesContainer>
+        @for (msg of messages(); track $index) {
+          <div class="chat-message" [ngClass]="{'chat-message--user': msg.sender === 'user', 'chat-message--coach': msg.sender === 'coach'}">
+            @if (msg.sender === 'coach') {
+              <div class="chat-message__avatar">🥑</div>
+            }
+            <div class="chat-message__content">
+              <div class="chat-message__bubble">
+                <p class="chat-message__text" [innerHTML]="formatMessage(msg.text)"></p>
+              </div>
+              @if (msg.products?.length) {
+                <div class="a2ui-cards-carousel">
+                  @for (prod of msg.products; track prod.productId) {
+                    <div class="a2ui-product-card" [class.a2ui-product-card--selected]="getProductQty(prod) > 0">
+                      @if (prod.discountBadge) {
+                        <span class="a2ui-product-card__badge">{{ prod.discountBadge }}</span>
+                      }
+                      <div class="a2ui-product-card__image-wrap">
+                        @if (prod.imageUrl) {
+                          <img [src]="prod.imageUrl" [alt]="prod.name" class="a2ui-product-card__image" />
+                        }
+                      </div>
+                      <div class="a2ui-product-card__divider"></div>
+                      <div class="a2ui-product-card__body">
+                        <span class="a2ui-product-card__brand">{{ prod.brand }}</span>
+                        <h4 class="a2ui-product-card__title" [title]="prod.name">{{ prod.name }}</h4>
+                        @if (prod.presentation) {
+                          <span class="a2ui-product-card__presentation">{{ prod.presentation }}</span>
+                        }
+                        <div class="a2ui-product-card__pricing">
+                          @if (prod.regularPrice) {
+                            <span class="a2ui-product-card__regular-price">{{ prod.regularPrice }}</span>
+                          } @else {
+                            <span class="a2ui-product-card__regular-price a2ui-product-card__regular-price--empty">&nbsp;</span>
+                          }
+                          <span class="a2ui-product-card__final-price">{{ prod.finalPrice }}</span>
+                          <span class="a2ui-product-card__unit-label">{{ prod.priceUnitLabel || '&nbsp;' }}</span>
+                        </div>
+                        <div class="a2ui-product-card__actions">
+                          @if (getProductQty(prod) === 0) {
+                            <button type="button" class="a2ui-product-card__add-btn" (click)="addProduct(prod)">
+                              Agregar
+                            </button>
+                          } @else {
+                            <div class="a2ui-product-card__qty-control">
+                              <button type="button" class="a2ui-product-card__qty-btn a2ui-product-card__qty-btn--remove" (click)="removeProduct(prod)" aria-label="Quitar">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                  <polyline points="3 6 5 6 21 6"></polyline>
+                                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                  <path d="M10 11v6"></path>
+                                  <path d="M14 11v6"></path>
+                                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                                </svg>
+                              </button>
+                              <span class="a2ui-product-card__qty-label">{{ getAddedLabel(prod) }}</span>
+                              <button type="button" class="a2ui-product-card__qty-btn a2ui-product-card__qty-btn--plus" (click)="addProduct(prod)" aria-label="Agregar más">
+                                +
+                              </button>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+              <span class="chat-message__time">{{ msg.time }}</span>
+            </div>
+          </div>
+        }
+
+        <!-- Indicador de escribiendo (Loading) -->
+        @if (isLoading()) {
+          <div class="chat-message chat-message--coach">
+            <div class="chat-message__avatar">🥑</div>
+            <div class="chat-message__content">
+              <div class="chat-message__bubble chat-message__bubble--typing">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Barra flotante de resumen rápido del carrito cuando hay productos -->
+      @if (cartService.totalItemsCount() > 0) {
+        <div class="chat-cart-bar">
+          <div class="chat-cart-bar__info">
+            <span class="chat-cart-bar__badge">{{ cartService.totalItemsCount() }}</span>
+            <div class="chat-cart-bar__text">
+              <span class="chat-cart-bar__label">Tu carrito Genkit Store</span>
+              <strong class="chat-cart-bar__total">S/ {{ cartService.totalFinal().toFixed(2) }}</strong>
+            </div>
+          </div>
+          <button type="button" class="chat-cart-bar__btn" (click)="openCartSummary()">
+            Ver resumen →
+          </button>
+        </div>
+      }
+
+      <!-- Sugerencias rápidas (si hay pocos mensajes) -->
+      @if (messages().length <= 2 && !isLoading()) {
+        <div class="chat-suggestions">
+          <span class="chat-suggestions__label">Preguntas rápidas:</span>
+          <div class="chat-suggestions__chips">
+            @for (suggestion of suggestedQuestions; track $index) {
+              <button type="button" class="chat-suggestions__chip" (click)="sendSuggestion(suggestion)">
+                {{ suggestion }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Input bar / Footer -->
+      <footer class="chat-footer">
+        <form class="chat-footer__form" (ngSubmit)="sendMessage()">
+          <input 
+            type="text" 
+            name="userMessage"
+            [(ngModel)]="currentMessage" 
+            placeholder="Escribe tu consulta sobre comidas..." 
+            class="chat-footer__input"
+            [disabled]="isLoading()"
+            autocomplete="off" />
+          <button 
+            type="submit" 
+            class="chat-footer__send-btn" 
+            [disabled]="!currentMessage.trim() || isLoading()"
+            aria-label="Enviar mensaje">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </form>
+      </footer>
+    }
   </div>
 }

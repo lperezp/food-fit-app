@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ChangeDetectorRef, inject } from '@angular/core';
 import { HeaderComponent } from "../../components/header/header.component";
 import { FoodService } from '../../services/food/food.service';
 
@@ -11,6 +11,7 @@ import { FoodService } from '../../services/food/food.service';
 export class DetailFoodPageComponent {
   detailFood;
   private foodService = inject(FoodService);
+  private cdr = inject(ChangeDetectorRef);
   constructor() {
     const detailFoodString = localStorage.getItem('DETAIL_FOOD');
     this.detailFood = detailFoodString ? JSON.parse(detailFoodString) : null;
@@ -26,6 +27,7 @@ export class DetailFoodPageComponent {
 
     this.foodService.generatedImageFood(payload).subscribe((data) => {
       this.detailFood.image = data["result"].url;
+      this.cdr.markForCheck();
     });
   }
 }

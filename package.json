@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "dev": "npm --prefix app run dev"
+  },
   "dependencies": {
     "@genkit-ai/vertexai": "^1.0.5"
   }

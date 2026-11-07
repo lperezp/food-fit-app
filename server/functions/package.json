@@ -9,7 +9,7 @@
     "build:watch": "tsc --watch",
     "genkit:dev": "genkit start -- npm run dev",
     "dev": "tsx --watch src/index.ts",
-    "serve": "npm run build && firebase emulators:start --only functions",
+    "serve": "npm run build && firebase emulators:start --only functions --project food-fit-with-genkit",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
@@ -20,6 +20,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@genkit-ai/a2ui": "^0.7.0",
     "@genkit-ai/firebase": "^1.42.0",
     "@genkit-ai/google-genai": "^1.42.0",
     "dotenv": "^17.4.2",

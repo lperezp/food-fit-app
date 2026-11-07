@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectorRef, inject, OnInit } from '@angular/core';
 import { HeaderComponent } from "../../components/header/header.component";
 import { FoodService } from '../../services/food/food.service';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -15,6 +15,7 @@ export class SearchPageComponent implements OnInit {
   private foodService = inject(FoodService);
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
 
   uuid: string = null;
 
@@ -54,6 +55,7 @@ export class SearchPageComponent implements OnInit {
         localStorage.setItem('LIST_FOOD_BY_INGREDIENT', JSON.stringify(data["result"]));
         this.listFood = data["result"];
         this.isLoading = false;
+        this.cdr.markForCheck();
       });
     } else {
       const payload = {
@@ -67,6 +69,7 @@ export class SearchPageComponent implements OnInit {
         localStorage.setItem('LIST_FOOD_BY_INGREDIENT', JSON.stringify(data["result"]));
         this.listFood = data["result"];
         this.isLoading = false;
+        this.cdr.markForCheck();
       });
     }
   }

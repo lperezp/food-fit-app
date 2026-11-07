@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectorRef, inject, OnInit } from '@angular/core';
 import { HeaderComponent } from "../../components/header/header.component";
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -16,6 +16,7 @@ export class FilterFoodPageComponent implements OnInit {
   private prohibitedFoodService = inject(ProhibitedFoodService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   formSearch: FormGroup = this.formBuilder.group({
     ingredient: ['', Validators.required]
@@ -35,10 +36,12 @@ export class FilterFoodPageComponent implements OnInit {
       if (currentUser?.uid) {
         const prohibitedFoods = await this.prohibitedFoodService.getProhibitedFoodsByUser(currentUser.uid);
         this.listFood = prohibitedFoods.map(food => food.name);
+        this.cdr.markForCheck();
       }
     } catch (error) {
       console.error('Error al cargar alimentos prohibidos:', error);
       this.error = 'Error al cargar los alimentos prohibidos';
+      this.cdr.markForCheck();
     }
   }
 
@@ -67,7 +70,7 @@ export class FilterFoodPageComponent implements OnInit {
       await this.prohibitedFoodService.addProhibitedFood(currentUser.uid, { name: ingredientName });
 
       // Actualizar la lista local
-      this.listFood.push(ingredientName);
+      this.listFood = [...this.listFood, ingredientName];
 
       // Limpiar el formulario
       this.formSearch.reset();
@@ -78,6 +81,7 @@ export class FilterFoodPageComponent implements OnInit {
       this.error = error instanceof Error ? error.message : 'Error al agregar el alimento';
     } finally {
       this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -97,6 +101,8 @@ export class FilterFoodPageComponent implements OnInit {
     } catch (error) {
       console.error('Error al eliminar alimento:', error);
       this.error = error instanceof Error ? error.message : 'Error al eliminar el alimento';
+    } finally {
+      this.cdr.markForCheck();
     }
   }
 }

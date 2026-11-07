@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
+    "start": "PATH=\"$HOME/.nvm/versions/node/v24.21.0/bin:$PATH\" ng serve",
+    "dev": "export PATH=\"$HOME/.nvm/versions/node/v24.21.0/bin:$HOME/.nvm/versions/node/v24.12.0/bin:$PATH\"; trap 'kill 0' EXIT; npm --prefix ../server/functions run build && (cd ../server/functions && firebase --project food-fit-with-genkit emulators:start --only functions) & ./node_modules/.bin/ng serve",
+    "build": "PATH=\"$HOME/.nvm/versions/node/v24.21.0/bin:$PATH\" ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "deploy": "ng build && firebase deploy"

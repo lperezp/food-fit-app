@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectorRef, inject, OnInit } from '@angular/core';
 import { HeaderComponent } from "../../components/header/header.component";
 import { FoodService } from '../../services/food/food.service';
 import { Router } from '@angular/router';
@@ -14,6 +14,7 @@ export class ListFoodPageComponent implements OnInit {
   isLoading = false;
   private foodService = inject(FoodService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
     const listFood = localStorage.getItem('LIST_FOOD');
@@ -33,6 +34,7 @@ export class ListFoodPageComponent implements OnInit {
       this.listFood = data['recipes'];
       localStorage.setItem('LIST_FOOD', JSON.stringify(this.listFood));
       this.isLoading = false;
+      this.cdr.markForCheck();
     });
   }
 
