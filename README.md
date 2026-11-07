@@ -1,6 +1,6 @@
 # Food Fit App powered by Firebase Genkit
 
-![Angular](https://img.shields.io/badge/Angular-22.2.1-DD0031?style=for-the-badge&logo=angular&logoColor=white)
+![Angular](https://img.shields.io/badge/Angular-22.2.5-DD0031?style=for-the-badge&logo=angular&logoColor=white)
 ![Firebase Genkit](https://img.shields.io/badge/Firebase-Genkit-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
 ![Gemini](https://img.shields.io/badge/Google%20AI-Gemini%203.6%20Flash-4285F4?style=for-the-badge&logo=google&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-24.x-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)

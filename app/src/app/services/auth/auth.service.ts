@@ -60,8 +60,12 @@ export class AuthService {
       const token = credential?.accessToken;
       const user = result.user;
 
-      // Guardar el usuario en Firestore con su uid
-      await this.saveUserToFirestore(user);
+      // Guardar el usuario en Firestore con su uid (sin bloquear el inicio de sesión si falla Firestore)
+      try {
+        await this.saveUserToFirestore(user);
+      } catch (firestoreError) {
+        console.warn('No se pudo sincronizar el usuario con Firestore, pero la autenticación fue exitosa:', firestoreError);
+      }
 
       const userInfo: UserInfo = {
         uid: user.uid,
