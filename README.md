@@ -142,7 +142,7 @@ Food Fit leverages **Firebase Genkit**'s generative AI orchestration, beta Agent
 
 ```
 food-fit/
-├── food-fit-app/                  # Angular 22 frontend application
+├── app/                           # Angular 22 frontend application
 │   ├── public/                    # Static public assets (icons, brand images, background)
 │   └── src/                       # Frontend source code
 │       ├── app/
@@ -158,9 +158,12 @@ food-fit/
     └── functions/                 # Firebase Cloud Functions (Node 22)
         ├── prompts/               # Dotprompt templates (.prompt files)
         ├── src/
+        │   ├── agents/            # Genkit autonomous agents (nutrition-coach.agent.ts)
+        │   ├── config/            # Genkit & Firebase Admin initialization (genkit.ts, firebase.ts)
+        │   ├── flows/             # Genkit flows (food-suggestion, list-foods, generate-image, nutrition-coach)
         │   ├── schemas/           # Zod input & output schemas
-        │   ├── index.ts           # Production Cloud Functions definitions
-        │   └── index.local.ts     # Local Genkit development server
+        │   ├── tools/             # Genkit tools (prohibited-foods.tool.ts)
+        │   └── index.ts           # Unified entry point for Genkit Developer UI & Cloud Functions
         └── lib/                   # Compiled JavaScript output
 ```
 
