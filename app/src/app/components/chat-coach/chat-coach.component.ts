@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FoodService, StoreProductCard } from '../../services/food/food.service';
 import { AuthService } from '../../services/auth/auth.service';
-import { CartService } from '../../services/cart/cart.service';
+import { CartService, OrderReceipt } from '../../services/cart/cart.service';
 
 interface ChatMessage {
   sender: 'user' | 'coach';
@@ -80,8 +80,57 @@ export class ChatCoachComponent implements AfterViewChecked {
   }
 
   backToChat() {
+    const completedOrder = this.cartService.orderSuccess();
+    this.cartService.clearOrderSuccess();
     this.cartService.closeCart();
     this.shouldScrollToBottom = true;
+
+    if (completedOrder) {
+      this.notifyPurchaseCompleted(completedOrder);
+    }
+  }
+
+  private notifyPurchaseCompleted(order: OrderReceipt) {
+    if (this.isLoading()) return;
+
+    this.isLoading.set(true);
+    this.shouldScrollToBottom = true;
+
+    const userId = this.authService.getCurrentUserId() || undefined;
+    const eventMessage = `[EVENTO_COMPRA_COMPLETADA] El usuario acaba de finalizar la compra con Google Pay en Genkit Store (Orden ${order.orderCode}, Total S/ ${order.total.toFixed(2)}, Productos comprados: ${order.purchasedItems.join(', ')}). Dile que ya realizó su compra exitosamente y bríndale ahora mismo las indicaciones paso a paso de preparación de la receta que estaban revisando. NO llames a getAvailableProducts ni generes cards A2UI.`;
+
+    this.foodService.chatWithNutritionCoach({ data: { message: eventMessage, userId, orderData: order.orderPayload } })
+      .subscribe({
+        next: (response) => {
+          const rawResult = response?.result;
+          const coachText = typeof rawResult === 'string'
+            ? rawResult
+            : (rawResult?.text || '¡Ya compraste tus ingredientes! Aquí tienes el paso a paso de la receta:');
+
+          this.messages.update(msgs => [
+            ...msgs,
+            {
+              sender: 'coach',
+              text: coachText,
+              time: this.getCurrentTimeString()
+            }
+          ]);
+          this.isLoading.set(false);
+          this.shouldScrollToBottom = true;
+        },
+        error: () => {
+          this.messages.update(msgs => [
+            ...msgs,
+            {
+              sender: 'coach',
+              text: `¡Ya compraste tus ingredientes en Genkit Store (Orden **${order.orderCode}**)! 🎉 ¿Listo para que te dé el paso a paso de la preparación?`,
+              time: this.getCurrentTimeString()
+            }
+          ]);
+          this.isLoading.set(false);
+          this.shouldScrollToBottom = true;
+        }
+      });
   }
 
   sendMessage(textToSend?: string) {

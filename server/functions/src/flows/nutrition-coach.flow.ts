@@ -1,5 +1,6 @@
 import { z } from 'genkit/beta';
 import { ai } from '../config/genkit';
+import { db } from '../config/firebase';
 import { nutritionCoachAgent } from '../agents/nutrition-coach.agent';
 import { clearRecentToolProducts, consumeRecentToolProducts } from '../tools/genkit-store.tool';
 
@@ -74,9 +75,19 @@ export const nutritionCoachFlow = ai.defineFlow(
         inputSchema: z.object({
             message: z.string().describe('Mensaje para el coach nutricional'),
             userId: z.string().optional().describe('ID opcional del usuario'),
+            orderData: z.any().optional().describe('Datos opcionales de la orden G Pay para persistir en Firestore'),
         }),
     },
-    async ({ message, userId }) => {
+    async ({ message, userId, orderData }) => {
+        if (orderData && orderData.orderCode) {
+            try {
+                await db.collection('orders').doc(String(orderData.orderCode)).set(orderData, { merge: true });
+                console.log(`[nutritionCoachFlow] Orden guardada en Firestore: orders/${orderData.orderCode}`);
+            } catch (err: any) {
+                console.warn('[nutritionCoachFlow] Error guardando orden en Firestore:', err.message);
+            }
+        }
+
         const sessionKey = userId || 'anonymous_user';
         let chat = userChatSessions.get(sessionKey);
         if (!chat) {

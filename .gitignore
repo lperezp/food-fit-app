@@ -1,3 +1,5 @@
 app/src/environments/environment.dev.ts
 app/src/environments/environment.ts
 server/functions/.genkit/*
+server/functions/.secret.local
+server/functions/.env

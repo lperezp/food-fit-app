@@ -1,12 +1,77 @@
 rules_version = '2';
 
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users/{userId}
+// Document ID: Firebase Auth UID
+// Fields:
+//   - uid: string (required, matches userId)
+//   - displayName: string (optional)
+//   - email: string (optional)
+//   - photoURL: string (optional)
+//   - lastLogin: string (optional, ISO 8601 timestamp)
+//
+// Collection: prohibited-food/{userId}
+// Document ID: Firebase Auth UID
+// Fields:
+//   - foods: list of strings (prohibited food names for the user)
+//
+// Collection: orders/{orderId}
+// Document ID: Auto-generated order ID
+// Fields:
+//   - userId: string (required, immutable, matches request.auth.uid)
+//   - status: string (required, must be 'PAID')
+//   - paymentMethod: string (required, must be 'GOOGLE_PAY')
+//   - totalFinal: number (required, >= 0)
+//   - items: list (required, <= 100 items)
+//   - additional order metadata (orderCode, createdAt, payment details, etc.)
+//
+// ===============================================================
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidOrder(data) {
+      return data.userId is string &&
+             data.userId == request.auth.uid &&
+             data.status == 'PAID' &&
+             data.paymentMethod == 'GOOGLE_PAY' &&
+             data.totalFinal is number &&
+             data.totalFinal >= 0 &&
+             data.items is list &&
+             data.items.size() <= 100;
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
     match /prohibited-food/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && isValidOrder(request.resource.data);
+      allow update, delete: if false;
     }
   }
 }

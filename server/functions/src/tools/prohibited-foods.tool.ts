@@ -39,7 +39,7 @@ export const getProhibitedFoodsTool = ai.defineTool(
             return {
                 foods: prohibitedFoods,
                 needsUserId: false,
-                message: `El usuario tiene las siguientes restricciones: ${prohibitedFoods.join(', ')}`,
+                message: `Restricciones internas del usuario: ${prohibitedFoods.join(', ')}. REGLA: NO menciones estas restricciones en saludos ni en sugerencias generales (solo evítalas en silencio). ÚNICAMENTE menciónalas si el usuario te pide explícitamente alguno de estos alimentos.`,
             };
         } catch (error: any) {
             console.warn(`[getProhibitedFoods] Aviso: No se pudo conectar a Firestore para el usuario ${userId}:`, error.message);

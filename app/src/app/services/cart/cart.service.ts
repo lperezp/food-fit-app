@@ -1,4 +1,7 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import app from '../../config/firebase.config';
+import { AuthService } from '../auth/auth.service';
 import { StoreProductCard } from '../food/food.service';
 
 export interface CartItem extends StoreProductCard {
@@ -7,15 +10,46 @@ export interface CartItem extends StoreProductCard {
   unitFinalPrice: number;
 }
 
+export interface GPayCardOption {
+  id: string;
+  brand: 'VISA' | 'MASTERCARD';
+  label: string;
+  last4: string;
+}
+
+export interface OrderReceipt {
+  orderCode: string;
+  firestorePath: string;
+  total: number;
+  discount: number;
+  itemsCount: number;
+  paymentMethodLabel: string;
+  purchasedItems: string[];
+  createdAt: string;
+  orderPayload?: Record<string, unknown>;
+}
+
 const CART_STORAGE_KEY = 'genkit_store_cart';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
+  private readonly db = getFirestore(app);
+  private readonly authService = inject(AuthService);
+
   readonly items = signal<CartItem[]>(this.loadFromStorage());
   readonly isCartOpen = signal(false);
-  readonly orderSuccess = signal<{ orderCode: string; total: number; itemsCount: number } | null>(null);
+  readonly isGPaySheetOpen = signal(false);
+  readonly isProcessingPayment = signal(false);
+  readonly orderSuccess = signal<OrderReceipt | null>(null);
+
+  readonly gPayCards: GPayCardOption[] = [
+    { id: 'visa-4242', brand: 'VISA', label: 'Visa Débito', last4: '4242' },
+    { id: 'mc-8890', brand: 'MASTERCARD', label: 'Mastercard Crédito', last4: '8890' },
+  ];
+
+  readonly selectedCard = signal<GPayCardOption>(this.gPayCards[0]);
 
   readonly totalItemsCount = computed(() =>
     this.items().reduce((acc, item) => acc + item.quantity, 0)
@@ -35,18 +69,39 @@ export class CartService {
 
   openCart(): void {
     this.orderSuccess.set(null);
+    this.isGPaySheetOpen.set(false);
     this.isCartOpen.set(true);
   }
 
   closeCart(): void {
+    this.isGPaySheetOpen.set(false);
     this.isCartOpen.set(false);
+  }
+
+  clearOrderSuccess(): void {
+    this.orderSuccess.set(null);
   }
 
   toggleCart(): void {
     if (!this.isCartOpen()) {
       this.orderSuccess.set(null);
+      this.isGPaySheetOpen.set(false);
     }
     this.isCartOpen.update(v => !v);
+  }
+
+  selectGPayCard(card: GPayCardOption): void {
+    this.selectedCard.set(card);
+  }
+
+  openGPaySheet(): void {
+    if (this.totalItemsCount() === 0) return;
+    this.isGPaySheetOpen.set(true);
+  }
+
+  closeGPaySheet(): void {
+    if (this.isProcessingPayment()) return;
+    this.isGPaySheetOpen.set(false);
   }
 
   getQuantity(productId: string): number {
@@ -111,18 +166,74 @@ export class CartService {
     this.saveToStorage([]);
   }
 
-  checkout(): void {
-    const total = this.totalFinal();
+  async confirmGPayPayment(): Promise<void> {
+    const currentItems = this.items();
+    const total = Number(this.totalFinal().toFixed(2));
+    const subtotalReg = Number(this.subtotalRegular().toFixed(2));
+    const discount = Number(this.totalDiscount().toFixed(2));
     const itemsCount = this.totalItemsCount();
-    if (itemsCount === 0) return;
 
-    const randomCode = 'GK-' + Math.floor(100000 + Math.random() * 900000);
-    this.clearCart();
-    this.orderSuccess.set({
-      orderCode: randomCode,
-      total,
+    if (itemsCount === 0 || this.isProcessingPayment()) return;
+
+    this.isProcessingPayment.set(true);
+
+    const orderCode = 'GK-' + Math.floor(100000 + Math.random() * 900000);
+    const card = this.selectedCard();
+    const user = this.authService.getCurrentUser();
+    const createdAt = new Date().toISOString();
+
+    const orderPayload = {
+      orderCode,
+      userId: user?.uid || 'anonymous',
+      userEmail: user?.email || 'invitado@foodfit.pe',
+      userName: user?.displayName || 'Usuario Food Fit',
+      store: 'Genkit Store',
+      paymentMethod: 'GOOGLE_PAY',
+      cardBrand: card.brand,
+      cardLast4: card.last4,
+      status: 'PAID',
+      currency: 'PEN',
       itemsCount,
-    });
+      subtotalRegular: subtotalReg,
+      totalDiscount: discount,
+      totalFinal: total,
+      items: currentItems.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        brand: item.brand,
+        presentation: item.presentation || '',
+        imageUrl: item.imageUrl || '',
+        quantity: item.quantity,
+        unitRegularPrice: item.unitRegularPrice,
+        unitFinalPrice: item.unitFinalPrice,
+        subtotal: Number((item.unitFinalPrice * item.quantity).toFixed(2)),
+      })),
+      createdAt,
+    };
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 850));
+      const orderRef = doc(this.db, 'orders', orderCode);
+      await setDoc(orderRef, orderPayload);
+      console.log(`Orden guardada en Firestore: orders/${orderCode}`);
+    } catch (error) {
+      console.warn('Aviso al guardar la orden en Firestore (continuando confirmación local):', error);
+    } finally {
+      this.isProcessingPayment.set(false);
+      this.isGPaySheetOpen.set(false);
+      this.clearCart();
+      this.orderSuccess.set({
+        orderCode,
+        firestorePath: `orders/${orderCode}`,
+        total,
+        discount,
+        itemsCount,
+        paymentMethodLabel: `G Pay • ${card.brand} •••• ${card.last4}`,
+        purchasedItems: currentItems.map(i => `${i.name} (${this.getFormattedPresentationQty(i, i.quantity)})`),
+        createdAt,
+        orderPayload,
+      });
+    }
   }
 
   getFormattedPresentationQty(item: { presentation?: string }, qty: number): string {

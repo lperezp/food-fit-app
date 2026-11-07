@@ -46,7 +46,7 @@ export class FoodService {
     return this._httpClient.post('https://foodsuggestionwithprohibitedfoodflowfunction-f3vjjpbx5q-uc.a.run.app', payload);
   }
 
-  chatWithNutritionCoach(payload: { data: { message: string; userId?: string } }) {
+  chatWithNutritionCoach(payload: { data: { message: string; userId?: string; orderData?: unknown } }) {
     return this._httpClient.post<{ result: string | NutritionCoachResult }>(environment.nutritionCoachUrl, payload);
   }
 }
